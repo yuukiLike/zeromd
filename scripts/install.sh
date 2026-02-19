@@ -24,10 +24,12 @@ set -euo pipefail
 # ---------- 路径变量 ----------
 # 获取本脚本所在的目录（不管你从哪里运行它）
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+# 项目根目录（scripts/ 的上一级）
+PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 # 自动同步脚本的路径（每 5 分钟执行一次的那个）
-SYNC_SCRIPT="$SCRIPT_DIR/scripts/sync.sh"
+SYNC_SCRIPT="$SCRIPT_DIR/sync.sh"
 # launchd 任务模板（macOS 的定时任务配置文件模板）
-PLIST_TEMPLATE="$SCRIPT_DIR/config/com.cc-md.sync.plist"
+PLIST_TEMPLATE="$PROJECT_DIR/com.cc-md.sync.plist"
 # launchd 任务实际安装位置（系统会从这里读取定时任务）
 PLIST_TARGET="$HOME/Library/LaunchAgents/com.cc-md.sync.plist"
 LAUNCH_AGENTS_DIR="$HOME/Library/LaunchAgents"
