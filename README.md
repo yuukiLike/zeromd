@@ -6,155 +6,160 @@
 ![Obsidian](https://img.shields.io/badge/Obsidian-vault%20sync-7C3AED)
 ![iCloud](https://img.shields.io/badge/iCloud-supported-lightblue)
 
-本地优先的 Obsidian 多端同步方案。零成本，零注册，零维护。
+[中文](README.zh.md) | **English**
 
-## 为什么做这个
+Local-first Obsidian multi-device sync. Zero cost. Zero signup. Zero maintenance.
 
-Obsidian vault 就是一个文件夹，里面全是 `.md` 文件。这意味着 Claude Code 等 AI 工具可以**直接读写你的知识库**——不需要 API，不需要插件，不需要任何中间层。
+## Why This Exists
+
+Obsidian vault is just a folder of `.md` files. This means AI tools like Claude Code can **read and write your knowledge base directly**:
+
+> **No API.** &ensp; **No plugins.** &ensp; **No middleware.**
 
 ```bash
-# Claude Code 天然能做这些事
-Grep "系统设计" ~/vault/         # 搜索所有笔记
-Read ~/vault/某篇笔记.md        # 读取内容
-Edit ~/vault/某篇笔记.md        # 修改、补充
-Glob "**/*.md" ~/vault/         # 遍历整个知识库
+# Claude Code works with your vault natively
+Grep "system design" ~/vault/       # search all notes
+Read ~/vault/some-note.md           # read content
+Edit ~/vault/some-note.md           # modify content
+Glob "**/*.md" ~/vault/             # traverse entire knowledge base
 ```
 
-对比 Notion 等云端方案：
+Compare with cloud-based solutions:
 
 |  | Obsidian vault | Notion |
 |--|---------------|--------|
-| AI 接入 | 直接读文件，零配置 | 需要 API + OAuth + MCP |
-| 数据格式 | 标准 markdown | 私有 block 结构，需解析 |
-| 读写速度 | 本地 I/O，毫秒级 | 网络请求 + rate limit |
-| 版本历史 | Git log 完整记录每次变更 | 无 |
-| 数据所有权 | 文件在你的硬盘上 | 存在别人的服务器上 |
+| AI access | Read files directly, zero config | API + OAuth + MCP required |
+| Data format | Standard markdown | Proprietary blocks, needs parsing |
+| Read/write speed | Local I/O, milliseconds | Network requests + rate limits |
+| Version history | Full Git log of every change | None |
+| Data ownership | Files on your disk | Stored on someone else's server |
 
-**本地文件 + 标准格式 = 不需要"接入"，天然就在一起。**
+**Local files + standard format = no "integration" needed. It just works.**
 
-cc-md 做的事很简单：让这个本地知识库在你的所有设备间保持同步。
+cc-md simply keeps this local knowledge base in sync across all your devices.
 
-## 架构
+## Architecture
 
 ```
 iPhone Obsidian ←─ iCloud ─→ macOS Obsidian ←─ Git ─→ GitHub ←─ Git ─→ Windows Obsidian
 ```
 
-- **macOS ↔ iOS**：iCloud 自动同步（秒级）
-- **macOS ↔ GitHub**：Git 定时同步（每 5 分钟，有改动才提交）
-- **Windows ↔ GitHub**：Git 手动或插件同步
+- **macOS ↔ iOS**: iCloud auto-sync (seconds)
+- **macOS ↔ GitHub**: Git timed sync (every 5 min, only when changes exist)
+- **Windows ↔ GitHub**: Git manual or plugin sync
 
-## 快速上手
-
-```bash
-# 1. 打开 Obsidian，创建 iCloud vault（名字如 notes）
-# 2. 在 GitHub 上创建私有仓库（如 cc-md-vault）
-# 3. 运行：
-cd ~/legend/cc-md && bash scripts/install.sh
-# 4. iPhone 装 Obsidian，打开同一个 iCloud vault
-# 搞定。
-```
-
-## 前提条件
-
-- macOS + [Obsidian](https://obsidian.md)（免费）
-- Git + SSH key 已配置
-- GitHub 上有一个**私有**仓库
-
-## 安装
-
-### 第 1 步：创建 iCloud vault
-
-打开 Obsidian → Create new vault → 存储位置选 iCloud → Create
-
-### 第 2 步：运行安装脚本
+## Quick Start
 
 ```bash
-cd ~/legend/cc-md && bash scripts/install.sh
+# 1. Open Obsidian, create an iCloud vault (e.g. "notes")
+# 2. Create a private repo on GitHub (e.g. "cc-md-vault")
+# 3. Run:
+git clone git@github.com:yourname/cc-md.git && cd cc-md && bash scripts/install.sh
+# 4. Install Obsidian on iPhone, open the same iCloud vault
+# Done.
 ```
 
-脚本会问三个问题：
+## Prerequisites
 
-| 提示 | 输入 |
-|------|------|
-| vault 名称 | 你的 vault 名字，如 `notes` |
-| GitHub 远程仓库 URL | `git@github.com:用户名/仓库.git` |
-| 是否立即推送 | `y` |
+- macOS + [Obsidian](https://obsidian.md) (free)
+- Git + SSH key configured
+- A **private** GitHub repo
 
-### 第 3 步：配置 iOS
+## Installation
 
-iPhone 装 Obsidian → 打开同一个 iCloud vault → 完成。
+### Step 1: Create iCloud vault
 
-### 第 4 步：配置 Windows（可选）
+Open Obsidian → Create new vault → Choose iCloud for storage → Create
+
+### Step 2: Run install script
 
 ```bash
-git clone git@github.com:用户名/仓库.git
+cd cc-md && bash scripts/install.sh
 ```
 
-用 Obsidian 打开 clone 下来的目录。推荐装 [obsidian-git](https://github.com/denolehov/obsidian-git) 插件自动同步。
+The script will ask three questions:
 
-## 验证
+| Prompt | Input |
+|--------|-------|
+| Vault name | Your vault name, e.g. `notes` |
+| GitHub remote URL | `git@github.com:yourname/repo.git` |
+| Push now? | `y` |
 
-**Mac → iPhone**：Mac 上新建笔记，30 秒后 iPhone 应该能看到。
+### Step 3: Set up iOS
 
-**iPhone → Mac**：iPhone 上写几个字，30 秒后 Mac 应该能看到。
+Install Obsidian on iPhone → Open the same iCloud vault → Done.
 
-**Git 同步**：等 5 分钟或手动执行 `bash ~/legend/cc-md/scripts/sync.sh`，GitHub 上应该能看到新 commit。
-
-## 同步原理
-
-**iCloud**（macOS ↔ iOS）：苹果系统自动处理，vault 存在 `~/Library/Mobile Documents/iCloud~md~obsidian/Documents/<vault名>/`，秒级同步。
-
-**Git**（macOS ↔ GitHub）：launchd 定时任务每 5 分钟执行 sync.sh：检查改动 → `git add` → `git commit` → `git pull --rebase` → `git push`。没改动就跳过。
-
-**为什么 5 分钟**：30 秒太碎，1 小时太慢，5 分钟刚好写完一段想法。可改 `~/Library/LaunchAgents/com.cc-md.sync.plist` 中的 `StartInterval`。
-
-## 方案选型
-
-| 替代方案 | 不选的原因 |
-|----------|-----------|
-| iCloud 全平台 | Windows 同步差，无版本历史 |
-| Obsidian Sync | ~$4/月，10 年 ≈ $480 |
-| 纯 Git 全平台 | iOS 无好用的免费 Git 方案 |
-| Notion | 私有格式，数据不在本地，AI 接入需要 API |
-| 自建服务 | 运维成本高，停维即断 |
-
-本方案：iCloud 管 Apple 生态同步，Git 管跨平台 + 版本历史。成本为零。
-
-## 风险与缓解
-
-| 风险 | 缓解 |
-|------|------|
-| iCloud 同步 .git 导致损坏 | 概率低；远程仓库是完整备份 |
-| macOS 关机时 iOS 编辑无法推到 Git | 开机后自动补推 |
-| Git 冲突 | `pull --rebase` + 纯文本易解决 |
-| GitHub 中断 | 本地 + iCloud 双备份 |
-
-## 常用命令
+### Step 4: Set up Windows (optional)
 
 ```bash
-bash ~/legend/cc-md/scripts/sync.sh        # 手动同步
-tail -20 ~/.cc-md/sync.log                  # 查看日志
-launchctl list | grep cc-md                 # 检查定时任务
+git clone git@github.com:yourname/repo.git
 ```
 
-## 卸载
+Open the cloned directory with Obsidian. Recommend installing [obsidian-git](https://github.com/denolehov/obsidian-git) plugin for auto-sync.
+
+## Verify
+
+**Mac → iPhone**: Create a note on Mac, it should appear on iPhone within 30 seconds.
+
+**iPhone → Mac**: Write something on iPhone, it should appear on Mac within 30 seconds.
+
+**Git sync**: Wait 5 minutes or run `bash scripts/sync.sh`, then check GitHub for new commits.
+
+## How Sync Works
+
+**iCloud** (macOS ↔ iOS): Handled by Apple automatically. Vault lives at `~/Library/Mobile Documents/iCloud~md~obsidian/Documents/<vault>/`. Syncs in seconds.
+
+**Git** (macOS ↔ GitHub): A launchd job runs sync.sh every 5 minutes: check changes → `git add` → `git commit` → `git pull --rebase` → `git push`. Skips if nothing changed.
+
+**Why 5 minutes**: 30s is too noisy, 1h is too slow, 5 min is just right for finishing a thought. Adjustable via `StartInterval` in `~/Library/LaunchAgents/com.cc-md.sync.plist`.
+
+## Why Not Other Solutions
+
+| Alternative | Why not |
+|-------------|---------|
+| iCloud everywhere | Poor Windows sync, no version history |
+| Obsidian Sync | ~$4/mo, ~$480 over 10 years |
+| Git everywhere | No good free Git client on iOS |
+| Notion | Proprietary format, data not local, AI needs API |
+| Self-hosted | High maintenance cost, dies when you stop |
+
+This approach: iCloud for Apple ecosystem sync, Git for cross-platform + version history. Zero cost.
+
+## Risks & Mitigations
+
+| Risk | Mitigation |
+|------|------------|
+| iCloud corrupts .git | Low probability; remote repo is full backup |
+| macOS off, iOS edits can't push | Auto-syncs when Mac wakes up |
+| Git conflicts | `pull --rebase` + plain text is easy to resolve |
+| GitHub down | Local + iCloud dual backup |
+
+## Common Commands
 
 ```bash
-bash ~/legend/cc-md/scripts/uninstall.sh
+bash scripts/sync.sh                        # manual sync
+tail -20 ~/.cc-md/sync.log                  # view logs
+launchctl list | grep cc-md                 # check scheduled task
 ```
 
-笔记不受影响，iCloud 同步照常，只是不再自动推 GitHub。
+## Uninstall
 
-## 项目结构
+```bash
+bash scripts/uninstall.sh
+```
+
+Your notes are not affected. iCloud sync continues. Only auto-push to GitHub stops.
+
+## Project Structure
 
 ```
 cc-md/
 ├── scripts/
-│   ├── install.sh          # 安装
-│   ├── uninstall.sh        # 卸载
-│   └── sync.sh             # 自动同步（每 5 分钟）
-├── com.cc-md.sync.plist    # launchd 任务模板
+│   ├── install.sh          # install
+│   ├── uninstall.sh        # uninstall
+│   └── sync.sh             # auto-sync (every 5 min)
+├── com.cc-md.sync.plist    # launchd job template
 ├── LICENSE
-└── README.md
+├── README.md               # English
+└── README.zh.md            # 中文
 ```
