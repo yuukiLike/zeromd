@@ -1,5 +1,11 @@
 # cc-md
 
+![Platform](https://img.shields.io/badge/platform-macOS-blue)
+![Shell](https://img.shields.io/badge/shell-bash-green)
+![License](https://img.shields.io/badge/license-MIT-yellow)
+![Obsidian](https://img.shields.io/badge/Obsidian-vault%20sync-7C3AED)
+![iCloud](https://img.shields.io/badge/iCloud-supported-lightblue)
+
 Obsidian 笔记多端同步方案。零成本，零注册，零维护。
 
 ## 它是什么
