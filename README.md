@@ -103,7 +103,7 @@ Open the cloned directory with Obsidian. Recommend installing [obsidian-git](htt
 
 **iPhone → Mac**: Write something on iPhone, it should appear on Mac within 30 seconds.
 
-**Git sync**: Wait 5 minutes or run `bash scripts/sync.sh`, then check GitHub for new commits.
+**Git sync**: Wait 5 minutes or run `md sync`, then check GitHub for new commits. Run `md status` to see current state.
 
 ## How Sync Works
 
@@ -137,18 +137,17 @@ This approach: iCloud for Apple ecosystem sync, Git for cross-platform + version
 ## Common Commands
 
 ```bash
-bash scripts/sync.sh                        # manual sync
-tail -20 ~/.cc-md/sync.log                  # view logs
-launchctl list | grep cc-md                 # check if sync task is running (output = running, empty = stopped)
+md                      # check sync status (same as md status)
+md doctor               # health check, diagnose issues
+md sync                 # manual sync now
+md log                  # view last 20 log entries
+md log 50               # view last 50 log entries
+md init                 # guided setup (re-run install)
 ```
 
 **Vault renamed?** No action needed. sync.sh auto-discovers the vault by scanning for `.git` in the iCloud Obsidian directory.
 
-**Task not running?** Reload it:
-
-```bash
-launchctl load ~/Library/LaunchAgents/com.cc-md.sync.plist
-```
+**Sync issues?** Run `md doctor` to diagnose.
 
 ## Uninstall
 
@@ -158,14 +157,27 @@ bash scripts/uninstall.sh
 
 Your notes are not affected. iCloud sync continues. Only auto-push to GitHub stops.
 
+## Contributing
+
+```bash
+bash tests/run.sh
+```
+
+Pure bash test suite, zero dependencies. Run it after any change to `scripts/`. All tests must pass before submitting a PR.
+
 ## Project Structure
 
 ```
 cc-md/
 ├── scripts/
+│   ├── cc-md               # CLI client (md status/doctor/sync/log/init)
 │   ├── install.sh          # install
 │   ├── uninstall.sh        # uninstall
 │   └── sync.sh             # auto-sync (every 5 min)
+├── tests/
+│   ├── run.sh              # test runner
+│   ├── test_cc-md.sh       # CLI tests
+│   └── test_sync.sh        # sync logic tests
 ├── com.cc-md.sync.plist    # launchd job template
 ├── LICENSE
 ├── README.md               # English

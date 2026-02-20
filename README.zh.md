@@ -103,7 +103,7 @@ git clone git@github.com:用户名/仓库.git
 
 **iPhone → Mac**：iPhone 上写几个字，30 秒后 Mac 应该能看到。
 
-**Git 同步**：等 5 分钟或手动执行 `bash scripts/sync.sh`，GitHub 上应该能看到新 commit。
+**Git 同步**：等 5 分钟或运行 `md sync`，GitHub 上应该能看到新 commit。运行 `md status` 查看当前状态。
 
 ## 同步原理
 
@@ -137,18 +137,17 @@ git clone git@github.com:用户名/仓库.git
 ## 常用命令
 
 ```bash
-bash scripts/sync.sh                        # 手动同步
-tail -20 ~/.cc-md/sync.log                  # 查看日志
-launchctl list | grep cc-md                 # 检查定时任务（有输出 = 运行中，空 = 未运行）
+md                      # 查看同步状态（等同于 md status）
+md doctor               # 健康检查，逐项诊断
+md sync                 # 立即手动同步
+md log                  # 查看最近 20 条同步日志
+md log 50               # 查看最近 50 条
+md init                 # 引导式初始化（重新运行安装流程）
 ```
 
 **改了 vault 名字？** 不需要任何操作。sync.sh 会自动扫描 iCloud 目录，找到有 `.git` 的 vault。
 
-**任务没在运行？** 重新加载：
-
-```bash
-launchctl load ~/Library/LaunchAgents/com.cc-md.sync.plist
-```
+**同步出问题？** 运行 `md doctor` 逐项排查。
 
 ## 卸载
 
@@ -158,14 +157,27 @@ bash scripts/uninstall.sh
 
 笔记不受影响，iCloud 同步照常，只是不再自动推 GitHub。
 
+## 参与贡献
+
+```bash
+bash tests/run.sh
+```
+
+纯 bash 测试套件，零依赖。修改 `scripts/` 下的文件后务必运行测试，PR 前确保全部通过。
+
 ## 项目结构
 
 ```
 cc-md/
 ├── scripts/
+│   ├── cc-md               # CLI 客户端（md status/doctor/sync/log/init）
 │   ├── install.sh          # 安装
 │   ├── uninstall.sh        # 卸载
 │   └── sync.sh             # 自动同步（每 5 分钟）
+├── tests/
+│   ├── run.sh              # 测试运行器
+│   ├── test_cc-md.sh       # CLI 测试
+│   └── test_sync.sh        # 同步逻辑测试
 ├── com.cc-md.sync.plist    # launchd 任务模板
 ├── LICENSE
 ├── README.md               # English

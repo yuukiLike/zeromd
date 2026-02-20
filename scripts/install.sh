@@ -184,6 +184,22 @@ launchctl load "$PLIST_TARGET"
 echo "定时任务已安装。"
 
 # =========================================================================
+# 第 6 步：安装 cc-md CLI 到 PATH
+# =========================================================================
+echo ""
+echo "安装 md 命令行工具..."
+mkdir -p "$HOME/.local/bin"
+ln -sf "$SCRIPT_DIR/cc-md" "$HOME/.local/bin/md"
+echo "已安装: ~/.local/bin/md"
+
+# 确保 ~/.local/bin 在 PATH 中
+if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
+    echo ""
+    echo "⚠ ~/.local/bin 不在 PATH 中，请添加到 shell 配置文件："
+    echo '  export PATH="$HOME/.local/bin:$PATH"'
+fi
+
+# =========================================================================
 # 完成
 # =========================================================================
 echo ""
@@ -194,9 +210,11 @@ echo ""
 echo "  Vault 路径: $VAULT_DIR"
 echo "  同步频率:   每 5 分钟（有改动才提交，没改动不动）"
 echo "  同步日志:   ~/.cc-md/sync.log"
+echo "  CLI 工具:   md status / doctor / sync / log"
 echo ""
 echo "  后续步骤:"
 echo "  1. macOS: 用 Obsidian 打开 iCloud 中的 vault"
 echo "  2. iOS:   打开 Obsidian → 选择 iCloud vault"
 echo "  3. Windows: git clone 仓库，用 Obsidian 打开"
+echo "  4. 运行 md status 查看同步状态"
 echo ""

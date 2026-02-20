@@ -4,7 +4,38 @@
       "Bash(git add:*)",
       "Bash(git commit:*)",
       "Bash(git mv:*)",
-      "Bash(git rm:*)"
+      "Bash(git rm:*)",
+      "Bash(find:*)",
+      "Bash(chmod:*)",
+      "Bash(bash /Users/chp/legend/cc-md/scripts/cc-md help)",
+      "Bash(bash /Users/chp/legend/cc-md/scripts/cc-md status)",
+      "Bash(bash /Users/chp/legend/cc-md/scripts/md help)",
+      "Bash(bash /Users/chp/legend/cc-md/scripts/md doctor)",
+      "Bash(bash /Users/chp/legend/cc-md/scripts/cc-md log 5)",
+      "Bash(bash /Users/chp/legend/cc-md/scripts/cc-md sync)",
+      "Bash(echo:*)",
+      "Bash(bash /Users/chp/legend/cc-md/scripts/cc-md log:*)",
+      "Bash(bash /Users/chp/legend/cc-md/scripts/cc-md doctor)",
+      "Bash(bash /Users/chp/legend/cc-md/scripts/cc-md)",
+      "Bash(bash /Users/chp/legend/cc-md/scripts/cc-md badcmd)",
+      "Bash(~/.cc-md/last-error)",
+      "Bash(~/.cc-md/consecutive-failures)",
+      "Bash(~/.local/bin/md sync:*)",
+      "Bash(bash tests/run.sh:*)",
+      "WebSearch"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash .claude/hooks/suggest-test.sh"
+          }
+        ]
+      }
     ]
   }
 }
