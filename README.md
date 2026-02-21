@@ -40,8 +40,29 @@ cc-md simply keeps this local knowledge base in sync across all your devices.
 
 ## Architecture
 
-```
-iPhone Obsidian ←─ iCloud ─→ macOS Obsidian ←─ Git ─→ GitHub ←─ Git ─→ Windows Obsidian
+```mermaid
+graph LR
+    subgraph icloud ["☁️ iCloud — seconds"]
+        direction LR
+        iPhone["📱<br/>iPhone"]
+        Mac["💻<br/>macOS"]
+    end
+
+    subgraph git ["🍀 Git — every 5 min"]
+        direction LR
+        GitHub["🍀<br/>GitHub"]
+    end
+
+    iPhone <--> Mac
+    Mac <--> GitHub
+    GitHub -.->|optional| Windows["🖥️<br/>Windows"]
+
+    style icloud fill:#eff6ff,stroke:#3b82f6,stroke-width:2px,color:#1e40af
+    style git fill:#f0fdf4,stroke:#16a34a,stroke-width:2px,color:#15803d
+    style iPhone fill:#3b82f6,color:#fff,stroke:#2563eb,stroke-width:2px
+    style Mac fill:#3b82f6,color:#fff,stroke:#2563eb,stroke-width:2px
+    style GitHub fill:#16a34a,color:#fff,stroke:#15803d,stroke-width:2px
+    style Windows fill:#94a3b8,color:#fff,stroke:#64748b,stroke-width:2px,stroke-dasharray: 5 5
 ```
 
 - **macOS ↔ iOS**: iCloud auto-sync (seconds)
@@ -77,7 +98,38 @@ The installer will find your vault, set up Git, connect to GitHub, and start syn
 
 **iCloud** (macOS ↔ iOS): Handled by Apple automatically. Vault lives at `~/Library/Mobile Documents/iCloud~md~obsidian/Documents/<vault>/`. Syncs in seconds.
 
-**Git** (macOS ↔ GitHub): A launchd job runs sync.sh every 5 minutes: check changes → `git add` → `git commit` → `git pull --rebase` → `git push`. Skips if nothing changed.
+**Git** (macOS ↔ GitHub): A launchd job runs sync.sh every 5 minutes:
+
+```mermaid
+flowchart TD
+    subgraph trigger ["⏰ Every 5 min — launchd"]
+        check{"📂<br/>Any changes?"}
+    end
+
+    subgraph sync ["🍀 Sync pipeline"]
+        stage["➕ git add -A"]
+        commit["💾 git commit"]
+        pull["⬇️ git pull --rebase"]
+        push["⬆️ git push"]
+    end
+
+    check -->|No| skip(["💤 Sleep — nothing to do"])
+    check -->|Yes| stage
+    stage --> commit --> pull --> push
+    push --> done(["✅ Synced to GitHub"])
+    pull -->|conflict| err(["⚠️ Needs manual fix<br/>md doctor to diagnose"])
+
+    style trigger fill:#eff6ff,stroke:#3b82f6,stroke-width:2px,color:#1e40af
+    style sync fill:#f0fdf4,stroke:#16a34a,stroke-width:2px,color:#15803d
+    style check fill:#3b82f6,color:#fff,stroke:#2563eb,stroke-width:2px
+    style stage fill:#16a34a,color:#fff,stroke:#15803d,stroke-width:2px
+    style commit fill:#16a34a,color:#fff,stroke:#15803d,stroke-width:2px
+    style pull fill:#16a34a,color:#fff,stroke:#15803d,stroke-width:2px
+    style push fill:#16a34a,color:#fff,stroke:#15803d,stroke-width:2px
+    style skip fill:#94a3b8,color:#fff,stroke:#64748b,stroke-width:2px
+    style done fill:#15803d,color:#fff,stroke:#166534,stroke-width:2px
+    style err fill:#ef4444,color:#fff,stroke:#dc2626,stroke-width:2px
+```
 
 **Why 5 minutes**: 30s is too noisy, 1h is too slow, 5 min is just right for finishing a thought. Adjustable via `StartInterval` in `~/Library/LaunchAgents/com.cc-md.sync.plist`.
 

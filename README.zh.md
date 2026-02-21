@@ -40,8 +40,29 @@ cc-md 做的事很简单：让这个本地知识库在你的所有设备间保�
 
 ## 架构
 
-```
-iPhone Obsidian ←─ iCloud ─→ macOS Obsidian ←─ Git ─→ GitHub ←─ Git ─→ Windows Obsidian
+```mermaid
+graph LR
+    subgraph icloud ["☁️ iCloud — 秒级同步"]
+        direction LR
+        iPhone["📱<br/>iPhone"]
+        Mac["💻<br/>macOS"]
+    end
+
+    subgraph git ["🍀 Git — 每 5 分钟"]
+        direction LR
+        GitHub["🍀<br/>GitHub"]
+    end
+
+    iPhone <--> Mac
+    Mac <--> GitHub
+    GitHub -.->|可选| Windows["🖥️<br/>Windows"]
+
+    style icloud fill:#eff6ff,stroke:#3b82f6,stroke-width:2px,color:#1e40af
+    style git fill:#f0fdf4,stroke:#16a34a,stroke-width:2px,color:#15803d
+    style iPhone fill:#3b82f6,color:#fff,stroke:#2563eb,stroke-width:2px
+    style Mac fill:#3b82f6,color:#fff,stroke:#2563eb,stroke-width:2px
+    style GitHub fill:#16a34a,color:#fff,stroke:#15803d,stroke-width:2px
+    style Windows fill:#94a3b8,color:#fff,stroke:#64748b,stroke-width:2px,stroke-dasharray: 5 5
 ```
 
 - **macOS ↔ iOS**：iCloud 自动同步（秒级）
@@ -77,7 +98,38 @@ bash <(curl -sL https://raw.githubusercontent.com/yuukiLike/cc-md/main/install-r
 
 **iCloud**（macOS ↔ iOS）：苹果系统自动处理，vault 存在 `~/Library/Mobile Documents/iCloud~md~obsidian/Documents/<vault名>/`，秒级同步。
 
-**Git**（macOS ↔ GitHub）：launchd 定时任务每 5 分钟执行 sync.sh：检查改动 → `git add` → `git commit` → `git pull --rebase` → `git push`。没改动就跳过。
+**Git**（macOS ↔ GitHub）：launchd 定时任务每 5 分钟执行 sync.sh：
+
+```mermaid
+flowchart TD
+    subgraph trigger ["⏰ 每 5 分钟 — launchd"]
+        check{"📂<br/>有改动？"}
+    end
+
+    subgraph sync ["🍀 同步流水线"]
+        stage["➕ git add -A"]
+        commit["💾 git commit"]
+        pull["⬇️ git pull --rebase"]
+        push["⬆️ git push"]
+    end
+
+    check -->|否| skip(["💤 跳过 — 无事发生"])
+    check -->|是| stage
+    stage --> commit --> pull --> push
+    push --> done(["✅ 已同步到 GitHub"])
+    pull -->|冲突| err(["⚠️ 需手动处理<br/>md doctor 排查"])
+
+    style trigger fill:#eff6ff,stroke:#3b82f6,stroke-width:2px,color:#1e40af
+    style sync fill:#f0fdf4,stroke:#16a34a,stroke-width:2px,color:#15803d
+    style check fill:#3b82f6,color:#fff,stroke:#2563eb,stroke-width:2px
+    style stage fill:#16a34a,color:#fff,stroke:#15803d,stroke-width:2px
+    style commit fill:#16a34a,color:#fff,stroke:#15803d,stroke-width:2px
+    style pull fill:#16a34a,color:#fff,stroke:#15803d,stroke-width:2px
+    style push fill:#16a34a,color:#fff,stroke:#15803d,stroke-width:2px
+    style skip fill:#94a3b8,color:#fff,stroke:#64748b,stroke-width:2px
+    style done fill:#15803d,color:#fff,stroke:#166534,stroke-width:2px
+    style err fill:#ef4444,color:#fff,stroke:#dc2626,stroke-width:2px
+```
 
 **为什么 5 分钟**：30 秒太碎，1 小时太慢，5 分钟刚好写完一段想法。可改 `~/Library/LaunchAgents/com.cc-md.sync.plist` 中的 `StartInterval`。
 
