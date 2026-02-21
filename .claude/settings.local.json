@@ -22,7 +22,8 @@
       "Bash(~/.cc-md/consecutive-failures)",
       "Bash(~/.local/bin/md sync:*)",
       "Bash(bash tests/run.sh:*)",
-      "WebSearch"
+      "WebSearch",
+      "Bash(git:*)"
     ]
   },
   "hooks": {

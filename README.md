@@ -46,14 +46,15 @@ iPhone Obsidian ←─ iCloud ─→ macOS Obsidian ←─ Git ─→ GitHub ←
 
 - **macOS ↔ iOS**: iCloud auto-sync (seconds)
 - **macOS ↔ GitHub**: Git timed sync (every 5 min, only when changes exist)
-- **Windows ↔ GitHub**: Git manual or plugin sync
+
+Windows users can `git clone` the repo and use [obsidian-git](https://github.com/denolehov/obsidian-git) for sync.
 
 ## Quick Start
 
 **Prerequisite**: Obsidian with an iCloud vault on your Mac.
 
 ```bash
-bash <(curl -sL https://raw.githubusercontent.com/anthropics/cc-md/main/install-remote.sh)
+bash <(curl -sL https://raw.githubusercontent.com/yuukiLike/cc-md/main/install-remote.sh)
 ```
 
 The installer will find your vault, set up Git, connect to GitHub, and start syncing.
@@ -63,8 +64,6 @@ The installer will find your vault, set up Git, connect to GitHub, and start syn
 - **No SSH key** → tells you exactly how to fix it
 
 **iPhone**: Install Obsidian → open the same iCloud vault. Done.
-
-**Windows** (optional): `git clone` your repo and open with Obsidian. Recommend [obsidian-git](https://github.com/denolehov/obsidian-git) for auto-sync.
 
 ## Verify
 

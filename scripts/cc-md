@@ -277,7 +277,7 @@ doctor 检查项:
   想换 vault？     重新运行 md init
   想看详细日志？   md log 100
 
-项目地址: https://github.com/anthropics/cc-md
+项目地址: https://github.com/yuukiLike/cc-md
 EOF
 }
 

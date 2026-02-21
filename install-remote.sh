@@ -15,7 +15,7 @@ set -euo pipefail
 
 CC_MD_HOME="$HOME/.cc-md"
 CC_MD_REPO="$CC_MD_HOME/cc-md"
-REPO_URL="https://github.com/anthropics/cc-md.git"
+REPO_URL="https://github.com/yuukiLike/cc-md.git"
 
 echo "cc-md installer"
 echo ""

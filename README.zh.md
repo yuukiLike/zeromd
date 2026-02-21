@@ -46,14 +46,15 @@ iPhone Obsidian ←─ iCloud ─→ macOS Obsidian ←─ Git ─→ GitHub ←
 
 - **macOS ↔ iOS**：iCloud 自动同步（秒级）
 - **macOS ↔ GitHub**：Git 定时同步（每 5 分钟，有改动才提交）
-- **Windows ↔ GitHub**：Git 手动或插件同步
+
+Windows 用户可 `git clone` 仓库后配合 [obsidian-git](https://github.com/denolehov/obsidian-git) 插件同步。
 
 ## 快速上手
 
 **前提**：Mac 上已安装 Obsidian，并创建了 iCloud vault。
 
 ```bash
-bash <(curl -sL https://raw.githubusercontent.com/anthropics/cc-md/main/install-remote.sh)
+bash <(curl -sL https://raw.githubusercontent.com/yuukiLike/cc-md/main/install-remote.sh)
 ```
 
 安装器会自动发现 vault、初始化 Git、连接 GitHub、启动同步。
@@ -63,8 +64,6 @@ bash <(curl -sL https://raw.githubusercontent.com/anthropics/cc-md/main/install-
 - **无 SSH key** → 明确告诉怎么修，re-run 即恢复
 
 **iPhone**：装 Obsidian → 打开同一个 iCloud vault，搞定。
-
-**Windows**（可选）：`git clone` 你的仓库，用 Obsidian 打开。推荐装 [obsidian-git](https://github.com/denolehov/obsidian-git) 自动同步。
 
 ## 验证
 
