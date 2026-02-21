@@ -59,6 +59,24 @@
 第 5 周+：X/Twitter 持续传播，Product Hunt 看情况
 ```
 
+## cc-md × cc-md-preview 联动
+
+核心定位：cc-md-preview 不是通用 markdown 预览器，而是 **cc-md vault 的专属阅读器**。
+
+### 高优先级
+- [ ] **Vault 自动发现**：复用 cc-md 的 iCloud vault 扫描逻辑，cc-md-preview 启动即找到 vault，零配置打开
+- [ ] **替换 Chrome Cache 模块**：sidebar 第二模块改为"同步状态"，展示最后同步时间、待同步文件数、健康状态（绿/黄/红）、一键手动同步
+- [ ] **Vault 浏览体验**：文件夹打开后的布局不做通用文件管理器，而是为 vault 设计的专属浏览体验
+
+### 差异化功能（杀手级）
+- [ ] **Git 历史可视化**：利用 cc-md 每 5 分钟自动 commit 的精细历史，做时间线视图、渲染级 diff 预览、笔记活跃热力图
+- [ ] **笔记演化时间线**：展示一篇笔记从初始想法到完整文章的成长过程
+
+### 不做
+- 不让 cc-md-preview 编辑 markdown（和 Obsidian 重叠）
+- 不让 cc-md 依赖 cc-md-preview（保持零依赖纯 bash）
+- 不合并两个项目（技术栈完全不同）
+
 ## 通用宣发 checklist（未来复用）
 
 每个新产品发布前过一遍：
