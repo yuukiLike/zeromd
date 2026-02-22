@@ -3,12 +3,12 @@
 <plist version="1.0">
 <dict>
     <key>Label</key>
-    <string>com.cc-md.sync</string>
+    <string>com.zeromd.sync</string>
 
     <key>ProgramArguments</key>
     <array>
         <string>/bin/bash</string>
-        <string>__CC_MD_SYNC_SCRIPT__</string>
+        <string>__ZEROMD_SYNC_SCRIPT__</string>
     </array>
 
     <key>StartInterval</key>
@@ -18,9 +18,9 @@
     <true/>
 
     <key>StandardOutPath</key>
-    <string>__CC_MD_HOME__/.cc-md/launchd-stdout.log</string>
+    <string>__ZEROMD_HOME__/.zeromd/launchd-stdout.log</string>
 
     <key>StandardErrorPath</key>
-    <string>__CC_MD_HOME__/.cc-md/launchd-stderr.log</string>
+    <string>__ZEROMD_HOME__/.zeromd/launchd-stderr.log</string>
 </dict>
 </plist>

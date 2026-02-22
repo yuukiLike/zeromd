@@ -1,18 +1,18 @@
 #!/bin/bash
-# cc-md sync script
+# zeromd sync script
 # 将 iCloud 中 Obsidian vault 的变更自动同步到 Git 远程仓库
 #
 # vault 查找策略（按优先级）：
-#   1. 环境变量 CC_MD_VAULT_DIR（install.sh 设置的）
-#   2. ~/.cc-md/vault-path 文件里记录的路径
+#   1. 环境变量 ZEROMD_VAULT_DIR（install.sh 设置的）
+#   2. ~/.zeromd/vault-path 文件里记录的路径
 #   3. 自动扫描 iCloud Obsidian 目录，找到第一个有 .git 的 vault
 # 这意味着即使你重命名了 vault，第 3 步也能自动找到它。
 
 set -uo pipefail
 # 注意：不用 set -e，所有错误通过显式检查处理，确保 record_error 被调用
 
-STATE_DIR="${CC_MD_STATE_DIR:-$HOME/.cc-md}"
-LOG_FILE="${CC_MD_LOG_FILE:-$STATE_DIR/sync.log}"
+STATE_DIR="${ZEROMD_STATE_DIR:-$HOME/.zeromd}"
+LOG_FILE="${ZEROMD_LOG_FILE:-$STATE_DIR/sync.log}"
 ICLOUD_OBSIDIAN="$HOME/Library/Mobile Documents/iCloud~md~obsidian/Documents"
 
 mkdir -p "$STATE_DIR"
@@ -43,8 +43,8 @@ record_success() {
 
 find_vault() {
     # 策略 1：环境变量
-    if [ -n "${CC_MD_VAULT_DIR:-}" ] && [ -d "${CC_MD_VAULT_DIR}/.git" ]; then
-        echo "$CC_MD_VAULT_DIR"
+    if [ -n "${ZEROMD_VAULT_DIR:-}" ] && [ -d "${ZEROMD_VAULT_DIR}/.git" ]; then
+        echo "$ZEROMD_VAULT_DIR"
         return
     fi
 

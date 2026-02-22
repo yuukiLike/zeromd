@@ -7,8 +7,8 @@
 - 未提交变更：`hackernews-post.md`（HN 帖子存档，未 commit）
 - 最近完成：
   - 重写安装体验：新建 `scripts/setup.sh` 智能安装器（8 阶段幂等），`install-remote.sh` curl 一键入口，`scripts/install.sh` 改为薄包装
-  - 修正所有 repo URL 从 anthropics/cc-md → yuukiLike/cc-md
-  - Windows 说明从 Quick Start 移至架构图下方（cc-md 不直接支持 Windows）
+  - 修正所有 repo URL 从 anthropics/zeromd → yuukiLike/zeromd
+  - Windows 说明从 Quick Start 移至架构图下方（zeromd 不直接支持 Windows）
   - 测试从 15 个增加到 25 个，全部通过
   - 写好 HN Show HN 帖子并已发布（周六凌晨，非最佳时段）
   - 创建了 GitHub profile（yuukiLike/yuukiLike repo）
@@ -20,14 +20,14 @@
 - [ ] **Push 到 GitHub**：当前本地有两个新 commit 未推送（setup 重写 + URL 修正），必须先 push 才能测试 curl 安装
 - [ ] **重发 HN**：首发是周六凌晨（美东下午），流量低。择日在美东周二~周四早 6-9 点（对应 UTC+8 晚 7-10 点）重新提交
 - [ ] **继续宣发**：Reddit r/ObsidianMD、r/selfhosted、V2EX、少数派，详细计划见下方"宣发计划"
-- [ ] **开发 cc-md-preview**：跨端只读 markdown 浏览器，cc-md vault 专属阅读器
+- [ ] **开发 zeromd-preview**：跨端只读 markdown 浏览器，zeromd vault 专属阅读器
 
 ## 代码中的 TODO
 - 无
 
 ## 备忘
-- HN 帖子存档在 `hackernews-post.md`，核心卖点：最 AI 友好的知识库是本地 .md 文件夹，cc-md 只是补上同步这最后一块拼图
-- GitHub profile README 存档在 `github-profile-README.md`，记得不要 commit 到 cc-md 仓库
+- HN 帖子存档在 `hackernews-post.md`，核心卖点：最 AI 友好的知识库是本地 .md 文件夹，zeromd 只是补上同步这最后一块拼图
+- GitHub profile README 存档在 `github-profile-README.md`，记得不要 commit 到 zeromd 仓库
 - setup.sh Phase 4（首次 push）失败会 exit 1 中断安装——这是有意为之，push 不通 daemon 跑起来也会一直报错
 - HN 最佳发帖时段：美东周二~周四早 6-9 点 = UTC+8 晚 7-10 点
 
@@ -72,20 +72,20 @@
 
 ---
 
-# cc-md × cc-md-preview 联动
+# zeromd × zeromd-preview 联动
 
-核心定位：cc-md-preview 不是通用 markdown 预览器，而是 **cc-md vault 的专属阅读器**。
+核心定位：zeromd-preview 不是通用 markdown 预览器，而是 **zeromd vault 的专属阅读器**。
 
 ## 高优先级
-- [ ] **Vault 自动发现**：复用 cc-md 的 iCloud vault 扫描逻辑，零配置打开
+- [ ] **Vault 自动发现**：复用 zeromd 的 iCloud vault 扫描逻辑，零配置打开
 - [ ] **同步状态展示**：sidebar 展示最后同步时间、待同步文件数、健康状态
 - [ ] **Vault 浏览体验**：为 vault 设计的专属浏览体验
 
 ## 差异化功能
-- [ ] **Git 历史可视化**：利用 cc-md 每 5 分钟自动 commit 的精细历史，做时间线视图
+- [ ] **Git 历史可视化**：利用 zeromd 每 5 分钟自动 commit 的精细历史，做时间线视图
 - [ ] **笔记演化时间线**：展示一篇笔记从初始想法到完整文章的成长过程
 
 ## 不做
-- 不让 cc-md-preview 编辑 markdown（和 Obsidian 重叠）
-- 不让 cc-md 依赖 cc-md-preview（保持零依赖纯 bash）
+- 不让 zeromd-preview 编辑 markdown（和 Obsidian 重叠）
+- 不让 zeromd 依赖 zeromd-preview（保持零依赖纯 bash）
 - 不合并两个项目（技术栈完全不同）

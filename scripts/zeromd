@@ -1,10 +1,10 @@
 #!/bin/bash
-# cc-md CLI — 查看同步状态、手动同步、健康检查
+# zeromd CLI — 查看同步状态、手动同步、健康检查
 set -euo pipefail
 
 REAL_PATH="$(readlink "$0" 2>/dev/null || echo "$0")"
 SCRIPT_DIR="$(cd "$(dirname "$REAL_PATH")" && pwd)"
-STATE_DIR="${CC_MD_STATE_DIR:-$HOME/.cc-md}"
+STATE_DIR="${ZEROMD_STATE_DIR:-$HOME/.zeromd}"
 
 # ---------- 工具函数 ----------
 
@@ -152,7 +152,7 @@ cmd_doctor() {
     fi
 
     # 4. launchd
-    if launchctl list 2>/dev/null | grep -q cc-md; then
+    if launchctl list 2>/dev/null | grep -q zeromd; then
         echo "  ✓ launchd 任务运行中"
     else
         echo "  ✗ launchd 任务未运行"
@@ -232,9 +232,9 @@ cmd_help() {
     cat <<'EOF'
 md — iCloud Obsidian vault 的 Git 同步工具
 
-cc-md 让你的 Obsidian 笔记在 iPhone、Mac、Windows 之间自动同步。
+zeromd 让你的 Obsidian 笔记在 iPhone、Mac、Windows 之间自动同步。
 Mac ↔ iOS 走 iCloud，Mac ↔ GitHub 走 Git，每 5 分钟自动执行。
-本命令是 cc-md 的客户端入口，用来查看状态、排查问题、手动操作。
+本命令是 zeromd 的客户端入口，用来查看状态、排查问题、手动操作。
 
 用法: md <command>
 
@@ -264,20 +264,20 @@ doctor 检查项:
   9. 是否有 Git rebase 中断状态
 
 文件与路径:
-  ~/.cc-md/vault-path              vault 路径配置
-  ~/.cc-md/sync.log                同步日志
-  ~/.cc-md/last-heartbeat          最近心跳时间戳（epoch）
-  ~/.cc-md/last-sync               最近成功同步时间戳（epoch）
-  ~/.cc-md/last-error              最近错误信息（空 = 无错误）
-  ~/.cc-md/consecutive-failures    连续失败次数
+  ~/.zeromd/vault-path              vault 路径配置
+  ~/.zeromd/sync.log                同步日志
+  ~/.zeromd/last-heartbeat          最近心跳时间戳（epoch）
+  ~/.zeromd/last-sync               最近成功同步时间戳（epoch）
+  ~/.zeromd/last-error              最近错误信息（空 = 无错误）
+  ~/.zeromd/consecutive-failures    连续失败次数
 
 常见问题:
   同步卡住了？     md doctor 看哪项是 ✗，通常是 rebase 冲突或 push 失败
-  后台没在跑？     launchctl load ~/Library/LaunchAgents/com.cc-md.sync.plist
+  后台没在跑？     launchctl load ~/Library/LaunchAgents/com.zeromd.sync.plist
   想换 vault？     重新运行 md init
   想看详细日志？   md log 100
 
-项目地址: https://github.com/yuukiLike/cc-md
+项目地址: https://github.com/yuukiLike/zeromd
 EOF
 }
 

@@ -1,4 +1,4 @@
-# cc-md
+# zeromd
 
 ![Platform](https://img.shields.io/badge/platform-macOS-blue)
 ![Shell](https://img.shields.io/badge/shell-bash-green)
@@ -12,7 +12,11 @@ Local-first Obsidian multi-device sync. Zero cost. Zero signup. Zero maintenance
 
 ## Why This Exists
 
-Obsidian vault is just a folder of `.md` files. This means AI tools like Claude Code can **read and write your knowledge base directly**:
+The most AI-native knowledge base isn't a SaaS product with an API. It's a folder of markdown files on your disk.
+
+And `.md` isn't done evolving — Mermaid already turned plain text into live diagrams. Interactivity might be its next chapter.
+
+Obsidian stores everything as plain `.md` files. AI tools like Claude Code can **read and write your knowledge base directly**:
 
 `No API` &ensp; `No plugins` &ensp; `No middleware`
 
@@ -36,7 +40,7 @@ Compare with cloud-based solutions:
 
 **Local files + standard format = no "integration" needed. It just works.**
 
-cc-md simply keeps this local knowledge base in sync across all your devices.
+zeromd simply keeps this local knowledge base in sync across all your devices.
 
 ## Architecture
 
@@ -75,7 +79,7 @@ Windows users can `git clone` the repo and use [obsidian-git](https://github.com
 **Prerequisite**: Obsidian with an iCloud vault on your Mac.
 
 ```bash
-bash <(curl -sL https://raw.githubusercontent.com/yuukiLike/cc-md/main/install-remote.sh)
+bash <(curl -sL https://raw.githubusercontent.com/yuukiLike/zeromd/main/install-remote.sh)
 ```
 
 The installer will find your vault, set up Git, connect to GitHub, and start syncing.
@@ -131,7 +135,7 @@ flowchart TD
     style err fill:#ef4444,color:#fff,stroke:#dc2626,stroke-width:2px
 ```
 
-**Why 5 minutes**: 30s is too noisy, 1h is too slow, 5 min is just right for finishing a thought. Adjustable via `StartInterval` in `~/Library/LaunchAgents/com.cc-md.sync.plist`.
+**Why 5 minutes**: 30s is too noisy, 1h is too slow, 5 min is just right for finishing a thought. Adjustable via `StartInterval` in `~/Library/LaunchAgents/com.zeromd.sync.plist`.
 
 ## Why Not Other Solutions
 
@@ -188,20 +192,20 @@ Pure bash test suite, zero dependencies. Run it after any change to `scripts/`. 
 ## Project Structure
 
 ```
-cc-md/
+zeromd/
 ├── scripts/
-│   ├── cc-md               # CLI client (md status/doctor/sync/log/setup)
+│   ├── zeromd               # CLI client (md status/doctor/sync/log/setup)
 │   ├── setup.sh            # smart installer (idempotent, 8 phases)
 │   ├── install.sh          # backward-compat wrapper → setup.sh
 │   ├── uninstall.sh        # uninstall
 │   └── sync.sh             # auto-sync (every 5 min)
 ├── tests/
 │   ├── run.sh              # test runner
-│   ├── test_cc-md.sh       # CLI tests
+│   ├── test_zeromd.sh       # CLI tests
 │   ├── test_sync.sh        # sync logic tests
 │   └── test_setup.sh       # setup logic tests
 ├── install-remote.sh       # curl one-liner entry point
-├── com.cc-md.sync.plist    # launchd job template
+├── com.zeromd.sync.plist    # launchd job template
 ├── LICENSE
 ├── README.md               # English
 └── README.zh.md            # 中文

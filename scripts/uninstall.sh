@@ -1,6 +1,6 @@
 #!/bin/bash
 # =========================================================================
-# cc-md 卸载脚本
+# zeromd 卸载脚本
 # =========================================================================
 # 这个脚本做三件事：
 #   1. 停止并移除定时同步任务
@@ -15,8 +15,8 @@
 
 set -uo pipefail
 
-PLIST_TARGET="$HOME/Library/LaunchAgents/com.cc-md.sync.plist"
-CONFIG_DIR="$HOME/.cc-md"
+PLIST_TARGET="$HOME/Library/LaunchAgents/com.zeromd.sync.plist"
+CONFIG_DIR="$HOME/.zeromd"
 VAULT_PATH_FILE="$CONFIG_DIR/vault-path"
 
 # 在删除配置之前，先把 vault 路径读出来，后面第 3 步要用
@@ -26,7 +26,7 @@ if [ -f "$VAULT_PATH_FILE" ]; then
 fi
 
 echo "========================================="
-echo "  cc-md uninstaller"
+echo "  zeromd uninstaller"
 echo "========================================="
 echo ""
 
@@ -47,7 +47,7 @@ fi
 # =========================================================================
 # 第 2 步：删除配置和日志
 # =========================================================================
-# ~/.cc-md/ 目录下有：vault-path、sync.log、launchd 日志
+# ~/.zeromd/ 目录下有：vault-path、sync.log、launchd 日志
 if [ -d "$CONFIG_DIR" ]; then
     echo ""
     echo "删除配置和日志 ($CONFIG_DIR)..."
@@ -61,7 +61,7 @@ fi
 # 第 3 步：可选 - 移除 vault 里的 Git
 # =========================================================================
 # 读取之前保存的 vault 路径
-# 注意：如果第 2 步已经删了 ~/.cc-md，这里就读不到了
+# 注意：如果第 2 步已经删了 ~/.zeromd，这里就读不到了
 # 所以我们在第 2 步之前先读出来
 echo ""
 echo "是否移除 vault 中的 Git 仓库？"

@@ -1,5 +1,5 @@
 #!/bin/bash
-# cc-md test runner — 纯 bash 实现，零依赖
+# zeromd test runner — 纯 bash 实现，零依赖
 set -uo pipefail
 
 TESTS_DIR="$(cd "$(dirname "$0")" && pwd)"
@@ -46,29 +46,29 @@ assert_exit_code() {
 # ---------- 测试环境 ----------
 
 setup_test_env() {
-    CC_MD_STATE_DIR="$(mktemp -d)"
-    CC_MD_TEST_VAULT="$(mktemp -d)"
-    export CC_MD_STATE_DIR CC_MD_TEST_VAULT
-    mkdir -p "$CC_MD_STATE_DIR"
+    ZEROMD_STATE_DIR="$(mktemp -d)"
+    ZEROMD_TEST_VAULT="$(mktemp -d)"
+    export ZEROMD_STATE_DIR ZEROMD_TEST_VAULT
+    mkdir -p "$ZEROMD_STATE_DIR"
 
     # 创建 mock vault（有初始提交的 git repo）
-    git -C "$CC_MD_TEST_VAULT" init -b main --quiet
-    git -C "$CC_MD_TEST_VAULT" config user.email "test@test.com"
-    git -C "$CC_MD_TEST_VAULT" config user.name "Test"
-    touch "$CC_MD_TEST_VAULT/.gitkeep"
-    git -C "$CC_MD_TEST_VAULT" add .gitkeep
-    git -C "$CC_MD_TEST_VAULT" commit -m "init" --quiet --no-gpg-sign
+    git -C "$ZEROMD_TEST_VAULT" init -b main --quiet
+    git -C "$ZEROMD_TEST_VAULT" config user.email "test@test.com"
+    git -C "$ZEROMD_TEST_VAULT" config user.name "Test"
+    touch "$ZEROMD_TEST_VAULT/.gitkeep"
+    git -C "$ZEROMD_TEST_VAULT" add .gitkeep
+    git -C "$ZEROMD_TEST_VAULT" commit -m "init" --quiet --no-gpg-sign
 
     # 写入 vault 配置
-    echo "$CC_MD_TEST_VAULT" > "$CC_MD_STATE_DIR/vault-path"
-    export CC_MD_VAULT_DIR="$CC_MD_TEST_VAULT"
-    export CC_MD_LOG_FILE="$CC_MD_STATE_DIR/sync.log"
+    echo "$ZEROMD_TEST_VAULT" > "$ZEROMD_STATE_DIR/vault-path"
+    export ZEROMD_VAULT_DIR="$ZEROMD_TEST_VAULT"
+    export ZEROMD_LOG_FILE="$ZEROMD_STATE_DIR/sync.log"
 }
 
 teardown_test_env() {
-    [ -n "${CC_MD_STATE_DIR:-}" ] && rm -rf "$CC_MD_STATE_DIR"
-    [ -n "${CC_MD_TEST_VAULT:-}" ] && rm -rf "$CC_MD_TEST_VAULT"
-    unset CC_MD_STATE_DIR CC_MD_TEST_VAULT CC_MD_VAULT_DIR CC_MD_LOG_FILE 2>/dev/null || true
+    [ -n "${ZEROMD_STATE_DIR:-}" ] && rm -rf "$ZEROMD_STATE_DIR"
+    [ -n "${ZEROMD_TEST_VAULT:-}" ] && rm -rf "$ZEROMD_TEST_VAULT"
+    unset ZEROMD_STATE_DIR ZEROMD_TEST_VAULT ZEROMD_VAULT_DIR ZEROMD_LOG_FILE 2>/dev/null || true
 }
 
 # ---------- 运行测试 ----------
@@ -111,7 +111,7 @@ run_test_file() {
 
 # ---------- Main ----------
 
-echo -e "${BOLD}cc-md test suite${NC}"
+echo -e "${BOLD}zeromd test suite${NC}"
 
 for test_file in "$TESTS_DIR"/test_*.sh; do
     [ -f "$test_file" ] || continue

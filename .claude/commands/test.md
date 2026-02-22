@@ -1,5 +1,5 @@
 ---
-description: 运行 cc-md 单元测试
+description: 运行 zeromd 单元测试
 allowed-tools: Bash
 ---
 运行项目的单元测试：

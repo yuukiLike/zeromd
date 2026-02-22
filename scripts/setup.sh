@@ -1,6 +1,6 @@
 #!/bin/bash
 # =========================================================================
-# cc-md setup — 智能安装器
+# zeromd setup — 智能安装器
 # =========================================================================
 # 分 8 个 phase，每个 phase 幂等（检测已完成则跳过）：
 #   0. Pre-flight：检查 git、SSH key、iCloud 目录
@@ -23,10 +23,10 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 PROJECT_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 SYNC_SCRIPT="$SCRIPT_DIR/sync.sh"
-PLIST_TEMPLATE="$PROJECT_DIR/com.cc-md.sync.plist"
-PLIST_TARGET="$HOME/Library/LaunchAgents/com.cc-md.sync.plist"
+PLIST_TEMPLATE="$PROJECT_DIR/com.zeromd.sync.plist"
+PLIST_TARGET="$HOME/Library/LaunchAgents/com.zeromd.sync.plist"
 LAUNCH_AGENTS_DIR="$HOME/Library/LaunchAgents"
-STATE_DIR="$HOME/.cc-md"
+STATE_DIR="$HOME/.zeromd"
 ICLOUD_OBSIDIAN="$HOME/Library/Mobile Documents/iCloud~md~obsidian/Documents"
 
 # ---------- 输出工具 ----------
@@ -181,14 +181,14 @@ else
 GITIGNORE
 
     git add -A
-    git commit -m "init: cc-md vault" --quiet --no-gpg-sign
+    git commit -m "init: zeromd vault" --quiet --no-gpg-sign
     ok "initialized git repo with first commit"
 fi
 
 # Save vault config
 mkdir -p "$STATE_DIR"
 echo "$VAULT_DIR" > "$STATE_DIR/vault-path"
-export CC_MD_VAULT_DIR="$VAULT_DIR"
+export ZEROMD_VAULT_DIR="$VAULT_DIR"
 
 # =========================================================================
 # Phase 3: GitHub remote
@@ -208,7 +208,7 @@ else
         # Get GitHub username
         gh_user="$(gh api user --jq '.login' 2>/dev/null || echo "")"
         if [ -n "$gh_user" ]; then
-            repo_name="cc-md-vault"
+            repo_name="zeromd-vault"
             echo -e "  ${DIM}Creating private repo: $gh_user/$repo_name${NC}"
             if gh repo create "$repo_name" --private --source="$VAULT_DIR" --remote=origin 2>/dev/null; then
                 ok "created private repo: $gh_user/$repo_name"
@@ -310,18 +310,18 @@ phase 5 "Install sync daemon"
 
 mkdir -p "$LAUNCH_AGENTS_DIR"
 
-if launchctl list 2>/dev/null | grep -q "com.cc-md.sync"; then
+if launchctl list 2>/dev/null | grep -q "com.zeromd.sync"; then
     skip "launchd job already loaded"
 else
     # Generate plist from template
-    sed -e "s|__CC_MD_SYNC_SCRIPT__|$SYNC_SCRIPT|g" \
-        -e "s|__CC_MD_HOME__|$HOME|g" \
+    sed -e "s|__ZEROMD_SYNC_SCRIPT__|$SYNC_SCRIPT|g" \
+        -e "s|__ZEROMD_HOME__|$HOME|g" \
         "$PLIST_TEMPLATE" > "$PLIST_TARGET"
 
     # Add environment variables
     /usr/libexec/PlistBuddy -c "Add :EnvironmentVariables dict" "$PLIST_TARGET" 2>/dev/null || true
-    /usr/libexec/PlistBuddy -c "Set :EnvironmentVariables:CC_MD_VAULT_DIR '$VAULT_DIR'" "$PLIST_TARGET" 2>/dev/null || \
-    /usr/libexec/PlistBuddy -c "Add :EnvironmentVariables:CC_MD_VAULT_DIR string '$VAULT_DIR'" "$PLIST_TARGET"
+    /usr/libexec/PlistBuddy -c "Set :EnvironmentVariables:ZEROMD_VAULT_DIR '$VAULT_DIR'" "$PLIST_TARGET" 2>/dev/null || \
+    /usr/libexec/PlistBuddy -c "Add :EnvironmentVariables:ZEROMD_VAULT_DIR string '$VAULT_DIR'" "$PLIST_TARGET"
     /usr/libexec/PlistBuddy -c "Add :EnvironmentVariables:PATH string '/usr/local/bin:/usr/bin:/bin:/opt/homebrew/bin'" "$PLIST_TARGET" 2>/dev/null || true
 
     launchctl unload "$PLIST_TARGET" 2>/dev/null || true
@@ -335,7 +335,7 @@ fi
 phase 6 "Install md CLI"
 
 mkdir -p "$HOME/.local/bin"
-ln -sf "$SCRIPT_DIR/cc-md" "$HOME/.local/bin/md"
+ln -sf "$SCRIPT_DIR/zeromd" "$HOME/.local/bin/md"
 
 if [[ ":$PATH:" == *":$HOME/.local/bin:"* ]]; then
     skip "md command in PATH"
@@ -353,7 +353,7 @@ else
     if [ -n "$shell_rc" ]; then
         if ! grep -q '\.local/bin' "$shell_rc" 2>/dev/null; then
             echo '' >> "$shell_rc"
-            echo '# cc-md CLI' >> "$shell_rc"
+            echo '# zeromd CLI' >> "$shell_rc"
             echo 'export PATH="$HOME/.local/bin:$PATH"' >> "$shell_rc"
             ok "added ~/.local/bin to PATH in $(basename "$shell_rc")"
             warn "run: source $shell_rc (or open new terminal)"
@@ -365,7 +365,7 @@ else
         echo '    export PATH="$HOME/.local/bin:$PATH"'
     fi
 fi
-ok "installed: md → $(readlink "$HOME/.local/bin/md" 2>/dev/null || echo "$SCRIPT_DIR/cc-md")"
+ok "installed: md → $(readlink "$HOME/.local/bin/md" 2>/dev/null || echo "$SCRIPT_DIR/zeromd")"
 
 # =========================================================================
 # Phase 7: Summary
@@ -373,12 +373,12 @@ ok "installed: md → $(readlink "$HOME/.local/bin/md" 2>/dev/null || echo "$SCR
 phase 7 "Done"
 
 echo ""
-echo -e "${GREEN}  cc-md is running.${NC}"
+echo -e "${GREEN}  zeromd is running.${NC}"
 echo ""
 echo "  Vault:  $VAULT_DIR"
 echo "  Remote: $(cd "$VAULT_DIR" && git remote get-url origin 2>/dev/null || echo 'N/A')"
 echo "  Sync:   every 5 min (only when changes exist)"
-echo "  Log:    ~/.cc-md/sync.log"
+echo "  Log:    ~/.zeromd/sync.log"
 echo ""
 echo "  Commands:"
 echo "    md status    — check sync state"

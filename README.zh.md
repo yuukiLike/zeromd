@@ -1,4 +1,4 @@
-# cc-md
+# zeromd
 
 ![Platform](https://img.shields.io/badge/platform-macOS-blue)
 ![Shell](https://img.shields.io/badge/shell-bash-green)
@@ -12,7 +12,11 @@
 
 ## 为什么做这个
 
-Obsidian vault 就是一个文件夹，里面全是 `.md` 文件。这意味着 Claude Code 等 AI 工具可以**直接读写你的知识库**：
+最 AI 友好的知识库不是某个带 API 的 SaaS 产品，而是你硬盘上的一堆 markdown 文件。
+
+而 `.md` 的进化还没结束——Mermaid 已经让纯文本变成了可交互的图表，这只是开始。
+
+Obsidian 把所有笔记存成 `.md` 文件。AI 工具（如 Claude Code）可以**直接读写你的知识库**：
 
 `零 API` &ensp; `零插件` &ensp; `零中间层`
 
@@ -36,7 +40,7 @@ Glob "**/*.md" ~/vault/         # 遍历整个知识库
 
 **本地文件 + 标准格式 = 不需要"接入"，天然就在一起。**
 
-cc-md 做的事很简单：让这个本地知识库在你的所有设备间保持同步。
+zeromd 做的事很简单：让这个本地知识库在你的所有设备间保持同步。
 
 ## 架构
 
@@ -75,7 +79,7 @@ Windows 用户可 `git clone` 仓库后配合 [obsidian-git](https://github.com/
 **前提**：Mac 上已安装 Obsidian，并创建了 iCloud vault。
 
 ```bash
-bash <(curl -sL https://raw.githubusercontent.com/yuukiLike/cc-md/main/install-remote.sh)
+bash <(curl -sL https://raw.githubusercontent.com/yuukiLike/zeromd/main/install-remote.sh)
 ```
 
 安装器会自动发现 vault、初始化 Git、连接 GitHub、启动同步。
@@ -131,7 +135,7 @@ flowchart TD
     style err fill:#ef4444,color:#fff,stroke:#dc2626,stroke-width:2px
 ```
 
-**为什么 5 分钟**：30 秒太碎，1 小时太慢，5 分钟刚好写完一段想法。可改 `~/Library/LaunchAgents/com.cc-md.sync.plist` 中的 `StartInterval`。
+**为什么 5 分钟**：30 秒太碎，1 小时太慢，5 分钟刚好写完一段想法。可改 `~/Library/LaunchAgents/com.zeromd.sync.plist` 中的 `StartInterval`。
 
 ## 方案选型
 
@@ -188,20 +192,20 @@ bash tests/run.sh
 ## 项目结构
 
 ```
-cc-md/
+zeromd/
 ├── scripts/
-│   ├── cc-md               # CLI 客户端（md status/doctor/sync/log/setup）
+│   ├── zeromd               # CLI 客户端（md status/doctor/sync/log/setup）
 │   ├── setup.sh            # 智能安装器（幂等，8 个阶段）
 │   ├── install.sh          # 向后兼容包装 → setup.sh
 │   ├── uninstall.sh        # 卸载
 │   └── sync.sh             # 自动同步（每 5 分钟）
 ├── tests/
 │   ├── run.sh              # 测试运行器
-│   ├── test_cc-md.sh       # CLI 测试
+│   ├── test_zeromd.sh       # CLI 测试
 │   ├── test_sync.sh        # 同步逻辑测试
 │   └── test_setup.sh       # 安装逻辑测试
 ├── install-remote.sh       # curl 一键安装入口
-├── com.cc-md.sync.plist    # launchd 任务模板
+├── com.zeromd.sync.plist    # launchd 任务模板
 ├── LICENSE
 ├── README.md               # English
 └── README.zh.md            # 中文

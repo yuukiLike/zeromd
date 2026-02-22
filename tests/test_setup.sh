@@ -87,14 +87,14 @@ test_hidden_dirs_skipped() {
 
 test_saved_vault_path_used() {
     # Write a vault-path that points to our test vault
-    echo "$CC_MD_TEST_VAULT" > "$CC_MD_STATE_DIR/vault-path"
+    echo "$ZEROMD_TEST_VAULT" > "$ZEROMD_STATE_DIR/vault-path"
 
     local saved
-    saved="$(cat "$CC_MD_STATE_DIR/vault-path")"
+    saved="$(cat "$ZEROMD_STATE_DIR/vault-path")"
 
     if [ -d "$saved" ]; then
         # This simulates setup.sh phase 1 "already configured" check
-        assert_eq "$CC_MD_TEST_VAULT" "$saved" "should use saved vault path"
+        assert_eq "$ZEROMD_TEST_VAULT" "$saved" "should use saved vault path"
     else
         _CURRENT_TEST_FAILED=1
         _ASSERT_MSGS+="    saved vault path should exist\n"
@@ -104,14 +104,14 @@ test_saved_vault_path_used() {
 # ---------- git init idempotency ----------
 
 test_git_init_idempotent() {
-    # CC_MD_TEST_VAULT already has .git from setup_test_env
+    # ZEROMD_TEST_VAULT already has .git from setup_test_env
     local commit_before
-    commit_before=$(git -C "$CC_MD_TEST_VAULT" rev-parse HEAD)
+    commit_before=$(git -C "$ZEROMD_TEST_VAULT" rev-parse HEAD)
 
     # Simulate phase 2: if .git exists, skip
-    if [ -d "$CC_MD_TEST_VAULT/.git" ]; then
+    if [ -d "$ZEROMD_TEST_VAULT/.git" ]; then
         local commit_after
-        commit_after=$(git -C "$CC_MD_TEST_VAULT" rev-parse HEAD)
+        commit_after=$(git -C "$ZEROMD_TEST_VAULT" rev-parse HEAD)
         assert_eq "$commit_before" "$commit_after" "HEAD should not change"
     else
         _CURRENT_TEST_FAILED=1
@@ -125,11 +125,11 @@ test_remote_skip_when_configured() {
     local bare_remote
     bare_remote="$(mktemp -d)"
     git init --bare --quiet "$bare_remote"
-    git -C "$CC_MD_TEST_VAULT" remote add origin "$bare_remote"
+    git -C "$ZEROMD_TEST_VAULT" remote add origin "$bare_remote"
 
     # Simulate phase 3: if remote exists, skip
     local url
-    url=$(git -C "$CC_MD_TEST_VAULT" remote get-url origin 2>/dev/null || echo "")
+    url=$(git -C "$ZEROMD_TEST_VAULT" remote get-url origin 2>/dev/null || echo "")
 
     assert_eq "$bare_remote" "$url" "remote should be configured"
 
@@ -145,14 +145,14 @@ test_install_sh_wrapper() {
     assert_contains "$install_content" "setup.sh" "install.sh should reference setup.sh"
 }
 
-# ---------- cc-md CLI setup subcommand ----------
+# ---------- zeromd CLI setup subcommand ----------
 
-test_cc_md_has_setup_cmd() {
-    local cc_md_content
-    cc_md_content=$(cat "$PROJECT_DIR/scripts/cc-md")
+test_zeromd_has_setup_cmd() {
+    local zeromd_content
+    zeromd_content=$(cat "$PROJECT_DIR/scripts/zeromd")
 
-    assert_contains "$cc_md_content" "setup)" "cc-md should have setup subcommand"
-    assert_contains "$cc_md_content" "cmd_setup" "cc-md should have cmd_setup function"
+    assert_contains "$zeromd_content" "setup)" "zeromd should have setup subcommand"
+    assert_contains "$zeromd_content" "cmd_setup" "zeromd should have cmd_setup function"
 }
 
 # ---------- URL validation ----------
