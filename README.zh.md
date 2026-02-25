@@ -90,13 +90,17 @@ bash <(curl -sL https://raw.githubusercontent.com/yuukiLike/zeromd/main/install-
 
 **iPhone**：装 Obsidian → 打开同一个 iCloud vault，搞定。
 
+## 为什么命令叫 `gmd` 而不是 `md`
+
+部分 shell 环境会占用 `md`（例如 oh-my-zsh 默认 `alias md='mkdir -p'`）。为避免冲突，主命令改为 `gmd`（git + md）。如果你的 shell 里 `md` 没被占用，它同样可用——两者指向同一个脚本。
+
 ## 验证
 
 **Mac → iPhone**：Mac 上新建笔记，30 秒后 iPhone 应该能看到。
 
 **iPhone → Mac**：iPhone 上写几个字，30 秒后 Mac 应该能看到。
 
-**Git 同步**：等 5 分钟或运行 `md sync`，GitHub 上应该能看到新 commit。运行 `md status` 查看当前状态。
+**Git 同步**：等 5 分钟或运行 `gmd sync`，GitHub 上应该能看到新 commit。运行 `gmd status` 查看当前状态。
 
 ## 同步原理
 
@@ -121,7 +125,7 @@ flowchart TD
     check -->|是| stage
     stage --> commit --> pull --> push
     push --> done(["✅ 已同步到 GitHub"])
-    pull -->|冲突| err(["⚠️ 需手动处理<br/>md doctor 排查"])
+    pull -->|冲突| err(["⚠️ 需手动处理<br/>gmd doctor 排查"])
 
     style trigger fill:#eff6ff,stroke:#3b82f6,stroke-width:2px,color:#1e40af
     style sync fill:#f0fdf4,stroke:#16a34a,stroke-width:2px,color:#15803d
@@ -161,17 +165,18 @@ flowchart TD
 ## 常用命令
 
 ```bash
-md                      # 查看同步状态（等同于 md status）
-md doctor               # 健康检查，逐项诊断
-md sync                 # 立即手动同步
-md log                  # 查看最近 20 条同步日志
-md log 50               # 查看最近 50 条
-md setup                # 智能安装（幂等，已完成的步骤自动跳过）
+gmd                      # 查看同步状态（等同于 gmd status）
+gmd doctor               # 健康检查，逐项诊断
+gmd sync                 # 立即手动同步
+gmd log                  # 查看最近 20 条同步日志
+gmd log 50               # 查看最近 50 条
+gmd setup                # 智能安装（幂等，已完成的步骤自动跳过）
+# md 也能用，向后兼容
 ```
 
 **改了 vault 名字？** 不需要任何操作。sync.sh 会自动扫描 iCloud 目录，找到有 `.git` 的 vault。
 
-**同步出问题？** 运行 `md doctor` 逐项排查。
+**同步出问题？** 运行 `gmd doctor` 逐项排查。
 
 ## 卸载
 

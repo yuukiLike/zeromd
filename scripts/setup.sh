@@ -332,13 +332,14 @@ fi
 # =========================================================================
 # Phase 6: CLI install
 # =========================================================================
-phase 6 "Install md CLI"
+phase 6 "Install gmd CLI"
 
 mkdir -p "$HOME/.local/bin"
+ln -sf "$SCRIPT_DIR/zeromd" "$HOME/.local/bin/gmd"
 ln -sf "$SCRIPT_DIR/zeromd" "$HOME/.local/bin/md"
 
 if [[ ":$PATH:" == *":$HOME/.local/bin:"* ]]; then
-    skip "md command in PATH"
+    skip "gmd command in PATH"
 else
     # Auto-fix PATH
     shell_rc=""
@@ -365,7 +366,7 @@ else
         echo '    export PATH="$HOME/.local/bin:$PATH"'
     fi
 fi
-ok "installed: md → $(readlink "$HOME/.local/bin/md" 2>/dev/null || echo "$SCRIPT_DIR/zeromd")"
+ok "installed: gmd → $(readlink "$HOME/.local/bin/gmd" 2>/dev/null || echo "$SCRIPT_DIR/zeromd")"
 
 # =========================================================================
 # Phase 7: Summary
@@ -381,9 +382,11 @@ echo "  Sync:   every 5 min (only when changes exist)"
 echo "  Log:    ~/.zeromd/sync.log"
 echo ""
 echo "  Commands:"
-echo "    md status    — check sync state"
-echo "    md sync      — sync now"
-echo "    md doctor    — diagnose issues"
+echo "    gmd status    — check sync state"
+echo "    gmd sync      — sync now"
+echo "    gmd doctor    — diagnose issues"
+echo ""
+echo -e "  ${DIM}Tip: md is also available as an alias for gmd.${NC}"
 echo ""
 echo "  iPhone: Install Obsidian → open the same iCloud vault. Done."
 echo ""

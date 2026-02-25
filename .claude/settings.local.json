@@ -24,7 +24,10 @@
       "Bash(bash tests/run.sh:*)",
       "WebSearch",
       "Bash(git:*)",
-      "WebFetch(domain:voiden.md)"
+      "WebFetch(domain:voiden.md)",
+      "WebFetch(domain:unifiedjs.com)",
+      "Skill(reply)",
+      "Skill(test)"
     ]
   },
   "hooks": {

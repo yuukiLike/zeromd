@@ -90,13 +90,17 @@ The installer will find your vault, set up Git, connect to GitHub, and start syn
 
 **iPhone**: Install Obsidian → open the same iCloud vault. Done.
 
+## Why `gmd` Instead of `md`
+
+Some shell environments define `md` as an alias (e.g., oh-my-zsh aliases `md='mkdir -p'`). To avoid conflicts, the primary command is `gmd` (git + md). If `md` is not taken in your shell, it works too — both point to the same script.
+
 ## Verify
 
 **Mac → iPhone**: Create a note on Mac, it should appear on iPhone within 30 seconds.
 
 **iPhone → Mac**: Write something on iPhone, it should appear on Mac within 30 seconds.
 
-**Git sync**: Wait 5 minutes or run `md sync`, then check GitHub for new commits. Run `md status` to see current state.
+**Git sync**: Wait 5 minutes or run `gmd sync`, then check GitHub for new commits. Run `gmd status` to see current state.
 
 ## How Sync Works
 
@@ -121,7 +125,7 @@ flowchart TD
     check -->|Yes| stage
     stage --> commit --> pull --> push
     push --> done(["✅ Synced to GitHub"])
-    pull -->|conflict| err(["⚠️ Needs manual fix<br/>md doctor to diagnose"])
+    pull -->|conflict| err(["⚠️ Needs manual fix<br/>gmd doctor to diagnose"])
 
     style trigger fill:#eff6ff,stroke:#3b82f6,stroke-width:2px,color:#1e40af
     style sync fill:#f0fdf4,stroke:#16a34a,stroke-width:2px,color:#15803d
@@ -161,17 +165,18 @@ This approach: iCloud for Apple ecosystem sync, Git for cross-platform + version
 ## Common Commands
 
 ```bash
-md                      # check sync status (same as md status)
-md doctor               # health check, diagnose issues
-md sync                 # manual sync now
-md log                  # view last 20 log entries
-md log 50               # view last 50 log entries
-md setup                # smart setup (idempotent, skips completed steps)
+gmd                      # check sync status (same as gmd status)
+gmd doctor               # health check, diagnose issues
+gmd sync                 # manual sync now
+gmd log                  # view last 20 log entries
+gmd log 50               # view last 50 log entries
+gmd setup                # smart setup (idempotent, skips completed steps)
+# "md" also works as a backward-compatible alias for "gmd"
 ```
 
 **Vault renamed?** No action needed. sync.sh auto-discovers the vault by scanning for `.git` in the iCloud Obsidian directory.
 
-**Sync issues?** Run `md doctor` to diagnose.
+**Sync issues?** Run `gmd doctor` to diagnose.
 
 ## Uninstall
 
