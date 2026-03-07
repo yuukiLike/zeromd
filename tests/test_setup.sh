@@ -145,6 +145,13 @@ test_install_sh_wrapper() {
     assert_contains "$install_content" "setup.sh" "install.sh should reference setup.sh"
 }
 
+test_setup_gitignore_has_obsidian_themes() {
+    local setup_content
+    setup_content=$(cat "$PROJECT_DIR/scripts/setup.sh")
+
+    assert_contains "$setup_content" ".obsidian/themes/" "setup .gitignore should ignore .obsidian/themes/"
+}
+
 # ---------- zeromd CLI setup subcommand ----------
 
 test_zeromd_has_setup_cmd() {

@@ -176,6 +176,7 @@ else
 .obsidian/workspace.json
 .obsidian/workspace-mobile.json
 .obsidian/appearance.json
+.obsidian/themes/
 .trash/
 .DS_Store
 GITIGNORE
