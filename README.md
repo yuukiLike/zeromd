@@ -82,11 +82,11 @@ Windows users can `git clone` the repo and use [obsidian-git](https://github.com
 bash <(curl -sL https://raw.githubusercontent.com/yuukiLike/zeromd/main/install-remote.sh)
 ```
 
-The installer will find your vault, set up Git, connect to GitHub, and start syncing.
+The installer will find your vault, set up Git, let you choose `SSH` or `HTTPS`, connect to GitHub, and start syncing.
 
-- **1 vault + `gh` CLI + SSH key** → zero prompts, fully automatic
-- **1 vault + SSH key, no `gh`** → 1 prompt (paste repo URL)
-- **No SSH key** → tells you exactly how to fix it
+- **1 vault + `gh` CLI** → creates or connects the repo, then uses your chosen protocol
+- **Manual setup** → pick `SSH` or `HTTPS`, then paste the matching repo URL
+- **No SSH key** → HTTPS still works; SSH setup tells you exactly how to fix it
 
 **iPhone**: Install Obsidian → open the same iCloud vault. Done.
 
@@ -101,6 +101,10 @@ Some shell environments define `md` as an alias (e.g., oh-my-zsh aliases `md='mk
 **iPhone → Mac**: Write something on iPhone, it should appear on Mac within 30 seconds.
 
 **Git sync**: Wait 5 minutes or run `gmd sync`, then check GitHub for new commits. Run `gmd status` to see current state.
+
+**SSH or HTTPS?** zeromd supports both. If you use HTTPS and GitHub rejects your credentials, zeromd now reports that as an HTTPS auth error instead of a generic push failure.
+
+**Switched to a new Mac?** On this machine's first sync, zeromd checks whether the local vault has already established sync with `origin/main`. If the local state may conflict, it creates a local `zeromd-backup-<timestamp>` branch first, then force-resets local `main` to `origin/main`.
 
 ## How Sync Works
 
@@ -177,6 +181,10 @@ gmd setup                # smart setup (idempotent, skips completed steps)
 **Vault renamed?** No action needed. sync.sh auto-discovers the vault by scanning for `.git` in the iCloud Obsidian directory.
 
 **Sync issues?** Run `gmd doctor` to diagnose.
+
+**HTTPS auth failed?** GitHub no longer accepts account passwords for Git operations. Update the HTTPS credentials your system Git uses, or switch the repo to SSH.
+
+**New machine shows old local commits?** The first sync on that Mac compares against `origin/main`. If it detects stale/diverged local state, zeromd saves it into a `zeromd-backup-<timestamp>` branch and realigns local `main` to the remote branch.
 
 ## Uninstall
 

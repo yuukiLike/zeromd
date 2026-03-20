@@ -126,18 +126,18 @@ cmd_doctor() {
     local vault_dir
     vault_dir="$(get_vault_dir)"
 
-    # 1. vault 路径
+    # 1. vault path
     if [ -n "$vault_dir" ] && [ -d "$vault_dir" ]; then
-        echo "  ✓ vault 路径存在: $vault_dir"
+        echo "  ✓ Vault path exists: $vault_dir"
     else
-        echo "  ✗ vault 路径不存在或未配置"
+        echo "  ✗ Vault path missing or not configured"
     fi
 
-    # 2. .git 目录
+    # 2. .git directory
     if [ -n "$vault_dir" ] && [ -d "$vault_dir/.git" ]; then
-        echo "  ✓ Git 仓库正常"
+        echo "  ✓ Git repo OK"
     else
-        echo "  ✗ Git 仓库不存在"
+        echo "  ✗ Git repo not found"
     fi
 
     # 3. remote
@@ -145,77 +145,77 @@ cmd_doctor() {
         local remote_url
         remote_url=$(git -C "$vault_dir" remote get-url origin 2>/dev/null || echo "")
         if [ -n "$remote_url" ]; then
-            echo "  ✓ Git remote 已配置: $remote_url"
+            echo "  ✓ Git remote configured: $remote_url"
         else
-            echo "  ✗ Git remote 未配置"
+            echo "  ✗ Git remote not configured"
         fi
     fi
 
     # 4. launchd
     if launchctl list 2>/dev/null | grep -q zeromd; then
-        echo "  ✓ launchd 任务运行中"
+        echo "  ✓ launchd job running"
     else
-        echo "  ✗ launchd 任务未运行"
+        echo "  ✗ launchd job not running"
     fi
 
-    # 5. 心跳
+    # 5. heartbeat
     if [ -f "$STATE_DIR/last-heartbeat" ]; then
         local now hb age
         now=$(date +%s)
         hb=$(cat "$STATE_DIR/last-heartbeat")
         age=$(( now - hb ))
         if [ "$age" -le 600 ]; then
-            echo "  ✓ 上次心跳: $(human_time $age)"
+            echo "  ✓ Last heartbeat: $(human_time $age)"
         else
-            echo "  ⚠ 上次心跳: $(human_time $age)（超过 10 分钟）"
+            echo "  ⚠ Last heartbeat: $(human_time $age) (over 10 min)"
         fi
     else
-        echo "  ⚠ 无心跳记录"
+        echo "  ⚠ No heartbeat recorded"
     fi
 
-    # 6. 上次同步错误
+    # 6. last sync error
     if [ -f "$STATE_DIR/last-error" ]; then
         local err
         err=$(cat "$STATE_DIR/last-error")
         if [ -n "$err" ]; then
-            echo "  ✗ 上次同步失败: $err"
+            echo "  ✗ Last sync failed: $err"
         else
-            echo "  ✓ 上次同步正常"
+            echo "  ✓ Last sync OK"
         fi
     else
-        echo "  ✓ 无同步错误"
+        echo "  ✓ No sync errors"
     fi
 
-    # 7. .git 目录大小
+    # 7. .git directory size
     if [ -n "$vault_dir" ] && [ -d "$vault_dir/.git" ]; then
         local git_size
         git_size=$(du -sh "$vault_dir/.git" 2>/dev/null | cut -f1)
         local size_bytes
         size_bytes=$(du -sk "$vault_dir/.git" 2>/dev/null | cut -f1)
         if [ "${size_bytes:-0}" -gt 102400 ]; then
-            echo "  ⚠ .git 目录较大: $git_size"
+            echo "  ⚠ .git directory large: $git_size"
         else
-            echo "  ✓ .git 目录大小: $git_size"
+            echo "  ✓ .git directory size: $git_size"
         fi
     fi
 
-    # 8. iCloud 占位文件
+    # 8. iCloud placeholder files
     if [ -n "$vault_dir" ] && [ -d "$vault_dir" ]; then
         local icloud_count
         icloud_count=$(find "$vault_dir" -name "*.icloud" 2>/dev/null | wc -l | tr -d ' ')
         if [ "$icloud_count" -gt 0 ]; then
-            echo "  ⚠ 发现 .icloud 占位文件: ${icloud_count} 个"
+            echo "  ⚠ Found .icloud placeholders: ${icloud_count}"
         else
-            echo "  ✓ 无 .icloud 占位文件"
+            echo "  ✓ No .icloud placeholders"
         fi
     fi
 
-    # 9. rebase 中断
+    # 9. rebase in progress
     if [ -n "$vault_dir" ] && [ -d "$vault_dir/.git" ]; then
         if [ -d "$vault_dir/.git/rebase-merge" ] || [ -d "$vault_dir/.git/rebase-apply" ]; then
-            echo "  ✗ Git rebase 中断中，需手动处理"
+            echo "  ✗ Git rebase in progress, manual resolution needed"
         else
-            echo "  ✓ 无 rebase 中断"
+            echo "  ✓ No rebase in progress"
         fi
     fi
 }
@@ -244,7 +244,7 @@ Mac ↔ iOS 走 iCloud，Mac ↔ GitHub 走 Git，每 5 分钟自动执行。
   log [N]         查看同步日志，N 为行数（默认 20）
   sync            立即执行一次前台同步（不等 5 分钟定时器）
   doctor          健康检查，逐项诊断 9 个检查点
-  setup           智能安装/重新配置（幂等，已完成的步骤自动跳过）
+  setup           智能安装/重新配置（支持 SSH / HTTPS，幂等）
   init            同 setup
   help            显示本帮助信息
 
@@ -252,6 +252,11 @@ status 输出示例:
   ✓ synced 3min ago · 0 pending · vault: notes        正常，3 分钟前同步过
   ✗ sync error: push failed · 5 pending · vault: notes 同步出错，有 5 个未提交变更
   ⚠ daemon not running · last seen 32min ago           后台任务可能挂了
+
+首次在新电脑同步:
+  zeromd 会先检查本机是否已与 origin/main 建立同步状态。
+  如果发现本地状态可能和远端冲突，会先创建 zeromd-backup-<timestamp> 分支，
+  再把本地 main 强制对齐到 origin/main，避免卡在 rebase 冲突里。
 
 doctor 检查项:
   1. vault 路径是否存在
@@ -271,9 +276,12 @@ doctor 检查项:
   ~/.zeromd/last-sync               最近成功同步时间戳（epoch）
   ~/.zeromd/last-error              最近错误信息（空 = 无错误）
   ~/.zeromd/consecutive-failures    连续失败次数
+  ~/.zeromd/upstream-established    本机已和 upstream 建立同步状态的标记
 
 常见问题:
   同步卡住了？     gmd doctor 看哪项是 ✗，通常是 rebase 冲突或 push 失败
+  HTTPS 认证失败？  GitHub 不支持账号密码推送；更新系统里保存的 git 凭证或改用 SSH
+  换了新电脑？     首次同步会自动检查 origin/main；若分叉会先建 backup 分支再对齐远端
   后台没在跑？     launchctl load ~/Library/LaunchAgents/com.zeromd.sync.plist
   想换 vault？     重新运行 gmd init
   想看详细日志？   gmd log 100
