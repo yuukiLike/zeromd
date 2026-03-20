@@ -58,6 +58,132 @@ fail() {
     echo -e "  ${RED}✗${NC} $1"
 }
 
+has_ssh_key() {
+    [ -f "$HOME/.ssh/id_ed25519" ] || [ -f "$HOME/.ssh/id_rsa" ] || [ -f "$HOME/.ssh/id_ecdsa" ]
+}
+
+detect_remote_protocol() {
+    local remote_url="${1:-}"
+    case "$remote_url" in
+        git@github.com:*|ssh://git@github.com/*)
+            echo "SSH"
+            ;;
+        https://github.com/*)
+            echo "HTTPS"
+            ;;
+        *)
+            echo "UNKNOWN"
+            ;;
+    esac
+}
+
+validate_remote_url() {
+    local protocol="$1" remote_url="$2"
+    case "$protocol" in
+        SSH)
+            [[ "$remote_url" =~ ^git@github\.com:[^/]+/.+\.git$ || "$remote_url" =~ ^ssh://git@github\.com/[^/]+/.+\.git$ ]]
+            ;;
+        HTTPS)
+            [[ "$remote_url" =~ ^https://github\.com/[^/]+/.+\.git$ ]]
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
+build_remote_url() {
+    local protocol="$1" owner="$2" repo="$3"
+    case "$protocol" in
+        SSH)
+            echo "git@github.com:$owner/$repo.git"
+            ;;
+        HTTPS)
+            echo "https://github.com/$owner/$repo.git"
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
+github_repo_path_from_url() {
+    local remote_url="${1:-}"
+    if [[ "$remote_url" =~ ^git@github\.com:([^/]+)/(.+)\.git$ ]]; then
+        echo "${BASH_REMATCH[1]}/${BASH_REMATCH[2]}"
+        return 0
+    fi
+
+    if [[ "$remote_url" =~ ^https://github\.com/([^/]+)/(.+)\.git$ ]]; then
+        echo "${BASH_REMATCH[1]}/${BASH_REMATCH[2]}"
+        return 0
+    fi
+
+    return 1
+}
+
+protocol_mismatch_message() {
+    local existing_url="$1" selected_protocol="$2"
+    local existing_protocol
+    existing_protocol="$(detect_remote_protocol "$existing_url")"
+    printf 'Current origin uses %s: %s\nYou selected %s for this setup.\n' \
+        "$existing_protocol" "$existing_url" "$selected_protocol"
+}
+
+choose_remote_protocol() {
+    local default_protocol="${1:-SSH}" choice
+
+    while true; do
+        read -r -p "  Choose GitHub remote protocol [1=SSH, 2=HTTPS] (default: $default_protocol): " choice
+        case "$choice" in
+            "")
+                echo "$default_protocol"
+                return 0
+                ;;
+            1|ssh|SSH)
+                echo "SSH"
+                return 0
+                ;;
+            2|https|HTTPS)
+                echo "HTTPS"
+                return 0
+                ;;
+            *)
+                warn "Invalid choice: $choice"
+                ;;
+        esac
+    done
+}
+
+prompt_remote_url() {
+    local protocol="$1" remote_url
+
+    while true; do
+        case "$protocol" in
+            SSH)
+                read -r -p "  Paste repo SSH URL (git@github.com:user/repo.git): " remote_url
+                ;;
+            HTTPS)
+                read -r -p "  Paste repo HTTPS URL (https://github.com/user/repo.git): " remote_url
+                ;;
+            *)
+                return 1
+                ;;
+        esac
+
+        if validate_remote_url "$protocol" "$remote_url"; then
+            echo "$remote_url"
+            return 0
+        fi
+
+        fail "Invalid $protocol URL: $remote_url"
+    done
+}
+
+if [ "${ZEROMD_SETUP_SOURCE_ONLY:-0}" = "1" ]; then
+    return 0 2>/dev/null || exit 0
+fi
+
 # =========================================================================
 # Phase 0: Pre-flight
 # =========================================================================
@@ -74,19 +200,10 @@ fi
 ok "git available"
 
 # SSH key
-if [ -f "$HOME/.ssh/id_ed25519" ] || [ -f "$HOME/.ssh/id_rsa" ] || [ -f "$HOME/.ssh/id_ecdsa" ]; then
+if has_ssh_key; then
     ok "SSH key found"
 else
-    fail "No SSH key found (~/.ssh/id_ed25519 or id_rsa)"
-    echo ""
-    echo "  Generate one:"
-    echo "    ssh-keygen -t ed25519 -C \"your-email@example.com\""
-    echo ""
-    echo "  Add it to GitHub:"
-    echo "    https://github.com/settings/keys"
-    echo ""
-    echo "  Then re-run this installer."
-    exit 1
+    warn "No SSH key found. HTTPS remote can still work; SSH setup will require a key later."
 fi
 
 # iCloud Obsidian directory
@@ -199,9 +316,44 @@ phase 3 "Connect to GitHub"
 cd "$VAULT_DIR"
 
 if git remote get-url origin &>/dev/null; then
-    skip "remote already configured: $(git remote get-url origin)"
+    existing_url="$(git remote get-url origin)"
+    existing_protocol="$(detect_remote_protocol "$existing_url")"
+
+    ok "existing origin: $existing_url"
+    echo "  Current protocol: $existing_protocol"
+
+    read -r -p "  Keep current origin? [Y/n]: " keep_existing_origin
+    if [[ ! "$keep_existing_origin" =~ ^[Nn]$ ]]; then
+        skip "keeping existing origin"
+    else
+        REMOTE_PROTOCOL="$(choose_remote_protocol "$existing_protocol")"
+        if [ "$REMOTE_PROTOCOL" != "$existing_protocol" ]; then
+            while IFS= read -r line; do
+                warn "$line"
+            done < <(protocol_mismatch_message "$existing_url" "$REMOTE_PROTOCOL")
+        fi
+
+        repo_path="$(github_repo_path_from_url "$existing_url" || echo "")"
+        if [ -n "$repo_path" ]; then
+            owner="${repo_path%%/*}"
+            repo_name="${repo_path#*/}"
+            REMOTE_URL="$(build_remote_url "$REMOTE_PROTOCOL" "$owner" "$repo_name")"
+        else
+            REMOTE_URL="$(prompt_remote_url "$REMOTE_PROTOCOL")"
+        fi
+
+        echo "  Replacement origin: $REMOTE_URL"
+        read -r -p "  Replace origin with this URL? [y/N]: " replace_origin
+        if [[ "$replace_origin" =~ ^[Yy]$ ]]; then
+            git remote set-url origin "$REMOTE_URL"
+            ok "remote updated: $REMOTE_URL"
+        else
+            skip "keeping existing origin: $existing_url"
+        fi
+    fi
 else
     REMOTE_URL=""
+    REMOTE_PROTOCOL="$(choose_remote_protocol "SSH")"
 
     # Try gh CLI first
     if command -v gh &>/dev/null && gh auth status &>/dev/null 2>&1; then
@@ -212,13 +364,14 @@ else
             repo_name="zeromd-vault"
             echo -e "  ${DIM}Creating private repo: $gh_user/$repo_name${NC}"
             if gh repo create "$repo_name" --private --source="$VAULT_DIR" --remote=origin 2>/dev/null; then
-                ok "created private repo: $gh_user/$repo_name"
-                REMOTE_URL="$(git remote get-url origin 2>/dev/null || echo "")"
+                REMOTE_URL="$(build_remote_url "$REMOTE_PROTOCOL" "$gh_user" "$repo_name")"
+                git remote set-url origin "$REMOTE_URL"
+                ok "created private repo: $gh_user/$repo_name ($REMOTE_PROTOCOL)"
             else
                 # Repo might already exist, try to set remote
-                REMOTE_URL="git@github.com:$gh_user/$repo_name.git"
+                REMOTE_URL="$(build_remote_url "$REMOTE_PROTOCOL" "$gh_user" "$repo_name")"
                 git remote add origin "$REMOTE_URL" 2>/dev/null || true
-                ok "connected to existing repo: $gh_user/$repo_name"
+                ok "connected to existing repo: $gh_user/$repo_name ($REMOTE_PROTOCOL)"
             fi
         fi
     fi
@@ -234,15 +387,7 @@ else
         echo "  Create a private repo on GitHub:"
         echo "    https://github.com/new"
         echo ""
-        read -r -p "  Paste repo SSH URL (git@github.com:user/repo.git): " REMOTE_URL
-
-        # Validate URL format
-        if [[ ! "$REMOTE_URL" =~ ^git@github\.com:.+/.+\.git$ ]]; then
-            fail "Invalid URL format: $REMOTE_URL"
-            echo ""
-            echo "  Expected format: git@github.com:username/repo.git"
-            exit 1
-        fi
+        REMOTE_URL="$(prompt_remote_url "$REMOTE_PROTOCOL")"
 
         git remote add origin "$REMOTE_URL"
         ok "remote configured: $REMOTE_URL"
@@ -270,27 +415,47 @@ else
 fi
 
 if [ "${_do_push:-0}" = "1" ]; then
-    # Test SSH connectivity first
-    echo -e "  ${DIM}Testing SSH connection to GitHub...${NC}"
-    if ssh -T git@github.com 2>&1 | grep -qi "successfully authenticated"; then
-        ok "SSH connection works"
-    else
-        # ssh -T returns exit code 1 even on success, check stderr
-        ssh_output="$(ssh -T git@github.com 2>&1 || true)"
-        if echo "$ssh_output" | grep -qi "successfully authenticated\|Hi "; then
-            ok "SSH connection works"
-        else
-            fail "SSH authentication failed"
+    remote_url="$(git remote get-url origin 2>/dev/null || echo "")"
+    remote_protocol="$(detect_remote_protocol "$remote_url")"
+
+    if [ "$remote_protocol" = "SSH" ]; then
+        if ! has_ssh_key; then
+            fail "SSH remote selected but no SSH key found"
             echo ""
-            echo "  1. Check your SSH key is added to GitHub:"
-            echo "     https://github.com/settings/keys"
+            echo "  Generate one:"
+            echo "    ssh-keygen -t ed25519 -C \"your-email@example.com\""
             echo ""
-            echo "  2. Test manually:"
-            echo "     ssh -T git@github.com"
+            echo "  Add it to GitHub:"
+            echo "    https://github.com/settings/keys"
             echo ""
-            echo "  Re-run this installer after fixing."
+            echo "  Then re-run this installer."
             exit 1
         fi
+
+        echo -e "  ${DIM}Testing SSH connection to GitHub...${NC}"
+        if ssh -T git@github.com 2>&1 | grep -qi "successfully authenticated"; then
+            ok "SSH connection works"
+        else
+            ssh_output="$(ssh -T git@github.com 2>&1 || true)"
+            if echo "$ssh_output" | grep -qi "successfully authenticated\|Hi "; then
+                ok "SSH connection works"
+            else
+                fail "SSH authentication failed"
+                echo ""
+                echo "  1. Check your SSH key is added to GitHub:"
+                echo "     https://github.com/settings/keys"
+                echo ""
+                echo "  2. Test manually:"
+                echo "     ssh -T git@github.com"
+                echo ""
+                echo "  Re-run this installer after fixing."
+                exit 1
+            fi
+        fi
+    elif [ "$remote_protocol" = "HTTPS" ]; then
+        ok "using HTTPS remote; git will prompt for credentials if needed"
+    else
+        warn "remote protocol could not be identified: $remote_url"
     fi
 
     if git push -u origin main 2>/dev/null; then

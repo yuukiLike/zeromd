@@ -182,3 +182,72 @@ test_ssh_url_format_invalid() {
         _ASSERT_MSGS+="    HTTPS URL should not match SSH pattern\n"
     fi
 }
+
+# ---------- remote protocol helpers ----------
+
+test_detect_remote_protocol_https() {
+    local rc=0 protocol
+    protocol="$(
+        (
+            export ZEROMD_SETUP_SOURCE_ONLY=1
+            source "$SETUP_CMD"
+            detect_remote_protocol "https://github.com/user/repo.git"
+        )
+    )" || rc=$?
+
+    assert_exit_code "0" "$rc" "setup helpers should be sourceable"
+    [ "$rc" -eq 0 ] && assert_eq "HTTPS" "$protocol" "should detect HTTPS protocol"
+}
+
+test_detect_remote_protocol_ssh() {
+    local rc=0 protocol
+    protocol="$(
+        (
+            export ZEROMD_SETUP_SOURCE_ONLY=1
+            source "$SETUP_CMD"
+            detect_remote_protocol "git@github.com:user/repo.git"
+        )
+    )" || rc=$?
+
+    assert_exit_code "0" "$rc" "setup helpers should be sourceable"
+    [ "$rc" -eq 0 ] && assert_eq "SSH" "$protocol" "should detect SSH protocol"
+}
+
+test_validate_https_remote_url() {
+    local rc=0
+    (
+        export ZEROMD_SETUP_SOURCE_ONLY=1
+        source "$SETUP_CMD"
+        validate_remote_url "HTTPS" "https://github.com/user/repo.git"
+    ) || rc=$?
+
+    assert_exit_code "0" "$rc" "should accept valid HTTPS GitHub URL"
+}
+
+test_reject_https_url_when_ssh_selected() {
+    local rc=0
+    (
+        export ZEROMD_SETUP_SOURCE_ONLY=1
+        source "$SETUP_CMD"
+        validate_remote_url "SSH" "https://github.com/user/repo.git"
+    ) || rc=$?
+
+    assert_exit_code "1" "$rc" "should reject HTTPS URL when SSH protocol is selected"
+}
+
+test_protocol_mismatch_message_mentions_both_sides() {
+    local rc=0 output
+    output="$(
+        (
+            export ZEROMD_SETUP_SOURCE_ONLY=1
+            source "$SETUP_CMD"
+            protocol_mismatch_message "https://github.com/user/repo.git" "SSH"
+        )
+    )" || rc=$?
+
+    assert_exit_code "0" "$rc" "should format protocol mismatch message"
+    if [ "$rc" -eq 0 ]; then
+        assert_contains "$output" "Current origin uses HTTPS" "mismatch should mention existing protocol"
+        assert_contains "$output" "selected SSH" "mismatch should mention selected protocol"
+    fi
+}

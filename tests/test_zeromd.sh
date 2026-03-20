@@ -120,10 +120,10 @@ test_doctor_healthy() {
     local output
     output=$(bash "$ZEROMD_CMD" doctor 2>&1)
 
-    assert_contains "$output" "✓ vault 路径存在" "vault check"
-    assert_contains "$output" "✓ Git 仓库正常" "git repo check"
-    assert_contains "$output" "✓ Git remote 已配置" "remote check"
-    assert_contains "$output" "✓ 上次心跳" "heartbeat check"
+    assert_contains "$output" "✓ Vault path exists" "vault check"
+    assert_contains "$output" "✓ Git repo OK" "git repo check"
+    assert_contains "$output" "✓ Git remote configured" "remote check"
+    assert_contains "$output" "✓ Last heartbeat" "heartbeat check"
 
     rm -rf "$bare_remote"
 }
@@ -134,5 +134,5 @@ test_doctor_no_vault() {
     local output
     output=$(bash "$ZEROMD_CMD" doctor 2>&1)
 
-    assert_contains "$output" "✗ vault 路径不存在或未配置" "no vault check"
+    assert_contains "$output" "✗ Vault path missing or not configured" "no vault check"
 }
