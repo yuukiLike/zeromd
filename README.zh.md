@@ -6,7 +6,7 @@
 ![Obsidian](https://img.shields.io/badge/Obsidian-vault%20sync-7C3AED)
 ![iCloud](https://img.shields.io/badge/iCloud-supported-lightblue)
 
-**中文** | [English](README.md)
+**中文** | [English](README.md) | [日本語](README.ja.md)
 
 本地优先的 Obsidian 多端同步方案。零成本，零注册，零维护。
 
@@ -175,12 +175,17 @@ gmd sync                 # 立即手动同步
 gmd log                  # 查看最近 20 条同步日志
 gmd log 50               # 查看最近 50 条
 gmd setup                # 智能安装（幂等，已完成的步骤自动跳过）
+gmd help                 # 极简帮助（支持中文、英文和日语）
 # md 也能用，向后兼容
 ```
+
+未指定语言时，`gmd help` 和 `gmd doctor` 会使用 macOS 的首选语言。命令后追加的语言优先级最高：`zh` 表示中文（也支持便利别名 `cn`），`en` 表示英文，`ja` 表示日语，例如 `gmd help ja` 或 `gmd doctor cn`。若需持久覆盖，可在 shell 配置中加入 `export ZEROMD_LANG=zh`（也可使用 `cn`、`en` 或 `ja`）。
 
 **改了 vault 名字？** 不需要任何操作。sync.sh 会自动扫描 iCloud 目录，找到有 `.git` 的 vault。
 
 **同步出问题？** 运行 `gmd doctor` 逐项排查。
+
+**后台任务停了？** 重新运行 `gmd setup`。**想切换 vault？** 运行 `gmd init`。
 
 **HTTPS 认证失败？** GitHub 不支持用账号密码做 Git push。更新系统里保存的 Git HTTPS 凭证，或者把仓库改成 SSH。
 
@@ -207,7 +212,7 @@ bash tests/run.sh
 ```
 zeromd/
 ├── scripts/
-│   ├── zeromd               # CLI 客户端（md status/doctor/sync/log/setup）
+│   ├── zeromd               # CLI 客户端（gmd status/sync/doctor/log/setup/help）
 │   ├── setup.sh            # 智能安装器（幂等，8 个阶段）
 │   ├── install.sh          # 向后兼容包装 → setup.sh
 │   ├── uninstall.sh        # 卸载
@@ -221,5 +226,6 @@ zeromd/
 ├── com.zeromd.sync.plist    # launchd 任务模板
 ├── LICENSE
 ├── README.md               # English
-└── README.zh.md            # 中文
+├── README.zh.md            # 中文
+└── README.ja.md            # 日本語
 ```

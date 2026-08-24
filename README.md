@@ -6,7 +6,7 @@
 ![Obsidian](https://img.shields.io/badge/Obsidian-vault%20sync-7C3AED)
 ![iCloud](https://img.shields.io/badge/iCloud-supported-lightblue)
 
-[中文](README.zh.md) | **English**
+[中文](README.zh.md) | **English** | [日本語](README.ja.md)
 
 Local-first Obsidian multi-device sync. Zero cost. Zero signup. Zero maintenance.
 
@@ -175,12 +175,17 @@ gmd sync                 # manual sync now
 gmd log                  # view last 20 log entries
 gmd log 50               # view last 50 log entries
 gmd setup                # smart setup (idempotent, skips completed steps)
+gmd help                 # compact help (Chinese, English, or Japanese)
 # "md" also works as a backward-compatible alias for "gmd"
 ```
+
+With no language specified, `gmd help` and `gmd doctor` use your macOS preferred language. A language appended to the command takes priority: use `zh` or its convenience alias `cn` for Chinese, `en` for English, and `ja` for Japanese—for example, `gmd help ja` or `gmd doctor cn`. For a persistent override, add `export ZEROMD_LANG=en` (or `zh`, `cn`, `ja`) to your shell config.
 
 **Vault renamed?** No action needed. sync.sh auto-discovers the vault by scanning for `.git` in the iCloud Obsidian directory.
 
 **Sync issues?** Run `gmd doctor` to diagnose.
+
+**Background task stopped?** Rerun `gmd setup`. **Switching vaults?** Run `gmd init`.
 
 **HTTPS auth failed?** GitHub no longer accepts account passwords for Git operations. Update the HTTPS credentials your system Git uses, or switch the repo to SSH.
 
@@ -207,7 +212,7 @@ Pure bash test suite, zero dependencies. Run it after any change to `scripts/`. 
 ```
 zeromd/
 ├── scripts/
-│   ├── zeromd               # CLI client (md status/doctor/sync/log/setup)
+│   ├── zeromd               # CLI client (gmd status/sync/doctor/log/setup/help)
 │   ├── setup.sh            # smart installer (idempotent, 8 phases)
 │   ├── install.sh          # backward-compat wrapper → setup.sh
 │   ├── uninstall.sh        # uninstall
@@ -221,5 +226,6 @@ zeromd/
 ├── com.zeromd.sync.plist    # launchd job template
 ├── LICENSE
 ├── README.md               # English
-└── README.zh.md            # 中文
+├── README.zh.md            # 中文
+└── README.ja.md            # 日本語
 ```

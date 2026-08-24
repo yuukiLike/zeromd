@@ -8,18 +8,134 @@ STATE_DIR="${ZEROMD_STATE_DIR:-$HOME/.zeromd}"
 
 # ---------- 工具函数 ----------
 
+# 将语言标签归一化为 CLI 支持的语言。cn 仅作为中文的精确别名。
+normalize_language() {
+    local value
+    value=$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]')
+
+    case "$value" in
+        cn|zh|zh_*|zh-*|zh.*) echo "zh" ;;
+        en|en_*|en-*|en.*)    echo "en" ;;
+        ja|ja_*|ja-*|ja.*)    echo "ja" ;;
+        *) return 1 ;;
+    esac
+}
+
+# 读取 macOS 的有序首选语言，返回第一个 CLI 支持的语言。
+macos_preferred_language() {
+    local preferred_languages language normalized
+
+    command -v osascript >/dev/null 2>&1 || return 1
+    preferred_languages=$(osascript -l JavaScript -e '
+ObjC.import("Foundation")
+var preferred = $.NSLocale.preferredLanguages
+var languages = []
+for (var i = 0; i < preferred.count; i++) {
+    languages.push(ObjC.unwrap(preferred.objectAtIndex(i)))
+}
+languages.join("\n")
+' 2>/dev/null) || return 1
+
+    while IFS= read -r language; do
+        if normalized=$(normalize_language "$language"); then
+            echo "$normalized"
+            return 0
+        fi
+    done <<EOF
+$preferred_languages
+EOF
+
+    return 1
+}
+
+# 解析语言：显式参数 > ZEROMD_LANG > macOS 首选语言 > 终端 locale > 英文
+resolve_language() {
+    local requested="${1:-}" resolved locale_value
+
+    if [ -n "$requested" ]; then
+        normalize_language "$requested"
+        return
+    fi
+
+    if [ -n "${ZEROMD_LANG:-}" ]; then
+        normalize_language "$ZEROMD_LANG" || echo "en"
+        return
+    fi
+
+    if resolved=$(macos_preferred_language); then
+        echo "$resolved"
+        return
+    fi
+
+    locale_value="${LC_ALL:-${LC_MESSAGES:-${LANG:-}}}"
+    normalize_language "$locale_value" || echo "en"
+}
+
+# help / doctor 支持显式 LANG
+command_language() {
+    case "$#" in
+        0) resolve_language "" ;;
+        1) resolve_language "$1" ;;
+        *) return 1 ;;
+    esac
+}
+
+language_error() {
+    local lang
+    lang=$(resolve_language "")
+    say "$lang" \
+        "语言: 请使用 zh / cn / en / ja" \
+        "Language: use zh / cn / en / ja" \
+        "言語: zh / cn / en / ja を使用してください" >&2
+}
+
+say() {
+    local lang="$1" zh_text="$2" en_text="$3" ja_text="$4"
+    case "$lang" in
+        zh) printf '%s\n' "$zh_text" ;;
+        ja) printf '%s\n' "$ja_text" ;;
+        *)  printf '%s\n' "$en_text" ;;
+    esac
+}
+
 # 将秒数转为人类可读的时间差
 human_time() {
-    local seconds=$1
-    if [ "$seconds" -lt 60 ]; then
-        echo "${seconds}s ago"
-    elif [ "$seconds" -lt 3600 ]; then
-        echo "$(( seconds / 60 ))min ago"
-    elif [ "$seconds" -lt 86400 ]; then
-        echo "$(( seconds / 3600 ))h ago"
-    else
-        echo "$(( seconds / 86400 ))d ago"
-    fi
+    local seconds=$1 lang="${2:-en}"
+    case "$lang" in
+        zh)
+            if [ "$seconds" -lt 60 ]; then
+                echo "${seconds}秒前"
+            elif [ "$seconds" -lt 3600 ]; then
+                echo "$(( seconds / 60 ))分钟前"
+            elif [ "$seconds" -lt 86400 ]; then
+                echo "$(( seconds / 3600 ))小时前"
+            else
+                echo "$(( seconds / 86400 ))天前"
+            fi
+            ;;
+        ja)
+            if [ "$seconds" -lt 60 ]; then
+                echo "${seconds}秒前"
+            elif [ "$seconds" -lt 3600 ]; then
+                echo "$(( seconds / 60 ))分前"
+            elif [ "$seconds" -lt 86400 ]; then
+                echo "$(( seconds / 3600 ))時間前"
+            else
+                echo "$(( seconds / 86400 ))日前"
+            fi
+            ;;
+        *)
+            if [ "$seconds" -lt 60 ]; then
+                echo "${seconds}s ago"
+            elif [ "$seconds" -lt 3600 ]; then
+                echo "$(( seconds / 60 ))min ago"
+            elif [ "$seconds" -lt 86400 ]; then
+                echo "$(( seconds / 3600 ))h ago"
+            else
+                echo "$(( seconds / 86400 ))d ago"
+            fi
+            ;;
+    esac
 }
 
 # 读取 vault 路径
@@ -121,6 +237,12 @@ cmd_sync() {
 }
 
 cmd_doctor() {
+    local lang
+    if ! lang="$(command_language "$@")"; then
+        language_error
+        return 2
+    fi
+
     echo "gmd doctor"
 
     local vault_dir
@@ -128,16 +250,28 @@ cmd_doctor() {
 
     # 1. vault path
     if [ -n "$vault_dir" ] && [ -d "$vault_dir" ]; then
-        echo "  ✓ Vault path exists: $vault_dir"
+        say "$lang" \
+            "  ✓ Vault 路径存在: $vault_dir" \
+            "  ✓ Vault path exists: $vault_dir" \
+            "  ✓ Vault パスが存在します: $vault_dir"
     else
-        echo "  ✗ Vault path missing or not configured"
+        say "$lang" \
+            "  ✗ Vault 路径不存在或未配置" \
+            "  ✗ Vault path missing or not configured" \
+            "  ✗ Vault パスが存在しないか未設定です"
     fi
 
     # 2. .git directory
     if [ -n "$vault_dir" ] && [ -d "$vault_dir/.git" ]; then
-        echo "  ✓ Git repo OK"
+        say "$lang" \
+            "  ✓ Git 仓库正常" \
+            "  ✓ Git repo OK" \
+            "  ✓ Git リポジトリは正常です"
     else
-        echo "  ✗ Git repo not found"
+        say "$lang" \
+            "  ✗ Git 仓库不存在" \
+            "  ✗ Git repo not found" \
+            "  ✗ Git リポジトリが見つかりません"
     fi
 
     # 3. remote
@@ -145,32 +279,54 @@ cmd_doctor() {
         local remote_url
         remote_url=$(git -C "$vault_dir" remote get-url origin 2>/dev/null || echo "")
         if [ -n "$remote_url" ]; then
-            echo "  ✓ Git remote configured: $remote_url"
+            say "$lang" \
+                "  ✓ Git remote 已配置: $remote_url" \
+                "  ✓ Git remote configured: $remote_url" \
+                "  ✓ Git リモートを設定済みです: $remote_url"
         else
-            echo "  ✗ Git remote not configured"
+            say "$lang" \
+                "  ✗ Git remote 未配置" \
+                "  ✗ Git remote not configured" \
+                "  ✗ Git リモートが未設定です"
         fi
     fi
 
     # 4. launchd
     if launchctl list 2>/dev/null | grep -q zeromd; then
-        echo "  ✓ launchd job running"
+        say "$lang" \
+            "  ✓ launchd 任务运行中" \
+            "  ✓ launchd job running" \
+            "  ✓ launchd ジョブが実行中です"
     else
-        echo "  ✗ launchd job not running"
+        say "$lang" \
+            "  ✗ launchd 任务未运行" \
+            "  ✗ launchd job not running" \
+            "  ✗ launchd ジョブが実行されていません"
     fi
 
     # 5. heartbeat
     if [ -f "$STATE_DIR/last-heartbeat" ]; then
-        local now hb age
+        local now hb age age_text
         now=$(date +%s)
         hb=$(cat "$STATE_DIR/last-heartbeat")
         age=$(( now - hb ))
+        age_text=$(human_time "$age" "$lang")
         if [ "$age" -le 600 ]; then
-            echo "  ✓ Last heartbeat: $(human_time $age)"
+            say "$lang" \
+                "  ✓ 上次心跳: $age_text" \
+                "  ✓ Last heartbeat: $age_text" \
+                "  ✓ 前回のハートビート: $age_text"
         else
-            echo "  ⚠ Last heartbeat: $(human_time $age) (over 10 min)"
+            say "$lang" \
+                "  ⚠ 上次心跳: ${age_text}（超过 10 分钟）" \
+                "  ⚠ Last heartbeat: $age_text (over 10 min)" \
+                "  ⚠ 前回のハートビート: ${age_text}（10分超）"
         fi
     else
-        echo "  ⚠ No heartbeat recorded"
+        say "$lang" \
+            "  ⚠ 无心跳记录" \
+            "  ⚠ No heartbeat recorded" \
+            "  ⚠ ハートビートの記録がありません"
     fi
 
     # 6. last sync error
@@ -178,12 +334,21 @@ cmd_doctor() {
         local err
         err=$(cat "$STATE_DIR/last-error")
         if [ -n "$err" ]; then
-            echo "  ✗ Last sync failed: $err"
+            say "$lang" \
+                "  ✗ 上次同步失败: $err" \
+                "  ✗ Last sync failed: $err" \
+                "  ✗ 前回の同期に失敗しました: $err"
         else
-            echo "  ✓ Last sync OK"
+            say "$lang" \
+                "  ✓ 上次同步正常" \
+                "  ✓ Last sync OK" \
+                "  ✓ 前回の同期は正常です"
         fi
     else
-        echo "  ✓ No sync errors"
+        say "$lang" \
+            "  ✓ 无同步错误" \
+            "  ✓ No sync errors" \
+            "  ✓ 同期エラーはありません"
     fi
 
     # 7. .git directory size
@@ -193,9 +358,15 @@ cmd_doctor() {
         local size_bytes
         size_bytes=$(du -sk "$vault_dir/.git" 2>/dev/null | cut -f1)
         if [ "${size_bytes:-0}" -gt 102400 ]; then
-            echo "  ⚠ .git directory large: $git_size"
+            say "$lang" \
+                "  ⚠ .git 目录较大: $git_size" \
+                "  ⚠ .git directory large: $git_size" \
+                "  ⚠ .git ディレクトリが大きいです: $git_size"
         else
-            echo "  ✓ .git directory size: $git_size"
+            say "$lang" \
+                "  ✓ .git 目录大小: $git_size" \
+                "  ✓ .git directory size: $git_size" \
+                "  ✓ .git ディレクトリのサイズ: $git_size"
         fi
     fi
 
@@ -204,18 +375,30 @@ cmd_doctor() {
         local icloud_count
         icloud_count=$(find "$vault_dir" -name "*.icloud" 2>/dev/null | wc -l | tr -d ' ')
         if [ "$icloud_count" -gt 0 ]; then
-            echo "  ⚠ Found .icloud placeholders: ${icloud_count}"
+            say "$lang" \
+                "  ⚠ 发现 .icloud 占位文件: ${icloud_count} 个" \
+                "  ⚠ Found .icloud placeholders: ${icloud_count}" \
+                "  ⚠ .icloud プレースホルダが見つかりました: ${icloud_count}個"
         else
-            echo "  ✓ No .icloud placeholders"
+            say "$lang" \
+                "  ✓ 无 .icloud 占位文件" \
+                "  ✓ No .icloud placeholders" \
+                "  ✓ .icloud プレースホルダはありません"
         fi
     fi
 
     # 9. rebase in progress
     if [ -n "$vault_dir" ] && [ -d "$vault_dir/.git" ]; then
         if [ -d "$vault_dir/.git/rebase-merge" ] || [ -d "$vault_dir/.git/rebase-apply" ]; then
-            echo "  ✗ Git rebase in progress, manual resolution needed"
+            say "$lang" \
+                "  ✗ Git rebase 中断中，需手动处理" \
+                "  ✗ Git rebase in progress, manual resolution needed" \
+                "  ✗ Git rebase が進行中です。手動での解決が必要です"
         else
-            echo "  ✓ No rebase in progress"
+            say "$lang" \
+                "  ✓ 无 rebase 中断" \
+                "  ✓ No rebase in progress" \
+                "  ✓ 進行中の rebase はありません"
         fi
     fi
 }
@@ -229,81 +412,92 @@ cmd_init() {
 }
 
 cmd_help() {
-    cat <<'EOF'
+    local lang
+    if ! lang="$(command_language "$@")"; then
+        language_error
+        return 2
+    fi
+
+    if [ "$lang" = "zh" ]; then
+        cat <<'EOF'
 gmd — iCloud Obsidian vault 的 Git 同步工具
 
-zeromd 让你的 Obsidian 笔记在 iPhone、Mac、Windows 之间自动同步。
-Mac ↔ iOS 走 iCloud，Mac ↔ GitHub 走 Git，每 5 分钟自动执行。
-本命令是 zeromd 的客户端入口，用来查看状态、排查问题、手动操作。
-
 用法: gmd <command>
-      （md 也可以用，向后兼容）
 
 命令:
-  status          查看同步状态（默认命令，直接运行 gmd 等同于 gmd status）
-  log [N]         查看同步日志，N 为行数（默认 20）
-  sync            立即执行一次前台同步（不等 5 分钟定时器）
-  doctor          健康检查，逐项诊断 9 个检查点
-  setup           智能安装/重新配置（支持 SSH / HTTPS，幂等）
-  init            同 setup
-  help            显示本帮助信息
+  status          同步状态（默认）
+  sync            立即同步
+  log [N]         最近 N 行日志（默认 20）
+  doctor [LANG]   健康检查
+  setup | init    安装或重新配置
+  help [LANG]     显示帮助
 
-status 输出示例:
-  ✓ synced 3min ago · 0 pending · vault: notes        正常，3 分钟前同步过
-  ✗ sync error: push failed · 5 pending · vault: notes 同步出错，有 5 个未提交变更
-  ⚠ daemon not running · last seen 32min ago           后台任务可能挂了
-
-首次在新电脑同步:
-  zeromd 会先检查本机是否已与 origin/main 建立同步状态。
-  如果发现本地状态可能和远端冲突，会先创建 zeromd-backup-<timestamp> 分支，
-  再把本地 main 强制对齐到 origin/main，避免卡在 rebase 冲突里。
-
-doctor 检查项:
-  1. vault 路径是否存在
-  2. vault 内 .git 目录是否正常
-  3. Git remote 是否已配置
-  4. launchd 定时任务是否运行中
-  5. 最近一次心跳是否在 10 分钟内
-  6. 上次同步是否有错误
-  7. .git 目录大小（>100MB 警告）
-  8. 是否有 iCloud .icloud 占位文件
-  9. 是否有 Git rebase 中断状态
-
-文件与路径:
-  ~/.zeromd/vault-path              vault 路径配置
-  ~/.zeromd/sync.log                同步日志
-  ~/.zeromd/last-heartbeat          最近心跳时间戳（epoch）
-  ~/.zeromd/last-sync               最近成功同步时间戳（epoch）
-  ~/.zeromd/last-error              最近错误信息（空 = 无错误）
-  ~/.zeromd/consecutive-failures    连续失败次数
-  ~/.zeromd/upstream-established    本机已和 upstream 建立同步状态的标记
-
-常见问题:
-  同步卡住了？     gmd doctor 看哪项是 ✗，通常是 rebase 冲突或 push 失败
-  HTTPS 认证失败？  GitHub 不支持账号密码推送；更新系统里保存的 git 凭证或改用 SSH
-  换了新电脑？     首次同步会自动检查 origin/main；若分叉会先建 backup 分支再对齐远端
-  后台没在跑？     launchctl load ~/Library/LaunchAgents/com.zeromd.sync.plist
-  想换 vault？     重新运行 gmd init
-  想看详细日志？   gmd log 100
-
-项目地址: https://github.com/yuukiLike/zeromd
+语言: 默认跟随系统；LANG: zh / cn / en / ja
+md 是 gmd 的兼容别名。
+文档: https://github.com/yuukiLike/zeromd/blob/main/README.zh.md
 EOF
+    elif [ "$lang" = "ja" ]; then
+        cat <<'EOF'
+gmd — iCloud 上の Obsidian Vault 用 Git 同期ツール
+
+使い方: gmd <command>
+
+コマンド:
+  status          同期状態（デフォルト）
+  sync            今すぐ同期
+  log [N]         最近の N 行のログ（デフォルト: 20）
+  doctor [LANG]   ヘルスチェック
+  setup | init    インストールまたは再設定
+  help [LANG]     ヘルプを表示
+
+言語: システム設定に従います。LANG: zh / cn / en / ja
+md は gmd の互換エイリアスです。
+ドキュメント: https://github.com/yuukiLike/zeromd/blob/main/README.ja.md
+EOF
+    else
+        cat <<'EOF'
+gmd — Git sync for iCloud Obsidian vaults
+
+Usage: gmd <command>
+
+Commands:
+  status          Sync status (default)
+  sync            Sync now
+  log [N]         Last N log lines (default: 20)
+  doctor [LANG]   Health check
+  setup | init    Install or reconfigure
+  help [LANG]     Show help
+
+Language: follows system settings; LANG: zh / cn / en / ja
+md remains a compatibility alias for gmd.
+Docs: https://github.com/yuukiLike/zeromd#readme
+EOF
+    fi
 }
 
 # ---------- 分发 ----------
 
-case "${1:-status}" in
-    status)  cmd_status ;;
-    log)     cmd_log "${2:-}" ;;
-    sync)    cmd_sync ;;
-    doctor)  cmd_doctor ;;
-    setup)   cmd_setup ;;
-    init)    cmd_init ;;
-    help|--help|-h)  cmd_help ;;
+command_name="${1:-status}"
+if [ "$#" -gt 0 ]; then
+    shift
+fi
+
+case "$command_name" in
+    status)  cmd_status "$@" ;;
+    log)     cmd_log "${1:-}" ;;
+    sync)    cmd_sync "$@" ;;
+    doctor)  cmd_doctor "$@" ;;
+    setup)   cmd_setup "$@" ;;
+    init)    cmd_init "$@" ;;
+    help|--help|-h)  cmd_help "$@" ;;
     *)
-        echo "未知命令: $1"
+        lang="$(resolve_language "")"
+        say "$lang" \
+            "未知命令: $command_name" \
+            "Unknown command: $command_name" \
+            "不明なコマンド: $command_name"
         echo ""
-        cmd_help
+        cmd_help "$lang"
         exit 1
         ;;
 esac

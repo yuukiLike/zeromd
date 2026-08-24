@@ -35,6 +35,14 @@ assert_contains() {
     fi
 }
 
+assert_not_contains() {
+    local haystack="$1" needle="$2" msg="${3:-assert_not_contains}"
+    if echo "$haystack" | grep -qF "$needle"; then
+        _CURRENT_TEST_FAILED=1
+        _ASSERT_MSGS+="    ${RED}✗ $msg${NC}\n      needle: '$needle' unexpectedly found in output\n"
+    fi
+}
+
 assert_exit_code() {
     local expected="$1" actual="$2" msg="${3:-assert_exit_code}"
     if [ "$expected" != "$actual" ]; then
