@@ -65,6 +65,29 @@ test_status_no_heartbeat() {
     assert_contains "$output" "⚠" "should contain warning"
 }
 
+# ---------- sync 子命令 ----------
+
+test_sync_success_reports_status() {
+    local rc=0 output
+    output=$(bash "$ZEROMD_CMD" sync 2>&1) || rc=$?
+
+    assert_exit_code "0" "$rc" "successful sync should return zero"
+    assert_contains "$output" "daemon running" "successful sync should show current status"
+}
+
+test_sync_failure_reports_error_and_preserves_exit_code() {
+    mkdir -p "$ZEROMD_TEST_VAULT/.git/rebase-merge"
+
+    local rc=0 output
+    output=$(bash "$ZEROMD_CMD" sync 2>&1) || rc=$?
+
+    assert_exit_code "1" "$rc" "failed sync should preserve the sync exit code"
+    assert_contains "$output" "sync failed (exit code: 1)" "failed sync should show a clear summary"
+    assert_contains "$output" "REBASE_CONFLICT" "failed sync should show the recorded error"
+    assert_contains "$output" "gmd log" "failed sync should point to detailed logs"
+    assert_contains "$output" "gmd doctor" "failed sync should point to diagnostics"
+}
+
 # ---------- log 子命令 ----------
 
 test_log_default() {

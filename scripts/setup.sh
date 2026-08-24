@@ -51,11 +51,11 @@ skip() {
 }
 
 warn() {
-    echo -e "  ${YELLOW}!${NC} $1"
+    echo -e "  ${YELLOW}!${NC} $1" >&2
 }
 
 fail() {
-    echo -e "  ${RED}✗${NC} $1"
+    echo -e "  ${RED}✗${NC} $1" >&2
 }
 
 has_ssh_key() {

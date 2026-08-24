@@ -213,6 +213,40 @@ test_detect_remote_protocol_ssh() {
     [ "$rc" -eq 0 ] && assert_eq "SSH" "$protocol" "should detect SSH protocol"
 }
 
+test_choose_remote_protocol_keeps_warnings_out_of_result() {
+    local rc=0 protocol stderr_file
+    stderr_file="$ZEROMD_STATE_DIR/choose-remote-protocol.stderr"
+
+    protocol="$(
+        (
+            export ZEROMD_SETUP_SOURCE_ONLY=1
+            source "$SETUP_CMD"
+            choose_remote_protocol "SSH"
+        ) <<< $'invalid\n1\n' 2>"$stderr_file"
+    )" || rc=$?
+
+    assert_exit_code "0" "$rc" "protocol prompt should recover from invalid input"
+    assert_eq "SSH" "$protocol" "warnings must not pollute the selected protocol"
+    assert_contains "$(cat "$stderr_file")" "Invalid choice: invalid" "invalid choice should still be shown"
+}
+
+test_prompt_remote_url_keeps_errors_out_of_result() {
+    local rc=0 remote_url stderr_file
+    stderr_file="$ZEROMD_STATE_DIR/prompt-remote-url.stderr"
+
+    remote_url="$(
+        (
+            export ZEROMD_SETUP_SOURCE_ONLY=1
+            source "$SETUP_CMD"
+            prompt_remote_url "HTTPS"
+        ) <<< $'not-a-url\nhttps://github.com/user/repo.git\n' 2>"$stderr_file"
+    )" || rc=$?
+
+    assert_exit_code "0" "$rc" "URL prompt should recover from invalid input"
+    assert_eq "https://github.com/user/repo.git" "$remote_url" "errors must not pollute the remote URL"
+    assert_contains "$(cat "$stderr_file")" "Invalid HTTPS URL: not-a-url" "invalid URL should still be shown"
+}
+
 test_validate_https_remote_url() {
     local rc=0
     (

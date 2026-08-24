@@ -225,15 +225,27 @@ cmd_log() {
 }
 
 cmd_sync() {
-    bash "$SCRIPT_DIR/sync.sh"
-    local rc=$?
+    local rc=0 last_error=""
+    bash "$SCRIPT_DIR/sync.sh" || rc=$?
+
     echo ""
-    if [ $rc -eq 0 ]; then
+    if [ "$rc" -eq 0 ]; then
         cmd_status
-    else
-        echo "sync 退出码: $rc"
-        cmd_status
+        return 0
     fi
+
+    if [ -s "$STATE_DIR/last-error" ]; then
+        last_error="$(cat "$STATE_DIR/last-error" 2>/dev/null || true)"
+    fi
+
+    echo "✗ sync failed (exit code: $rc)" >&2
+    if [ -n "$last_error" ]; then
+        echo "  Error: $last_error" >&2
+    fi
+    echo "  Details: gmd log" >&2
+    echo "  Diagnose: gmd doctor" >&2
+
+    return "$rc"
 }
 
 cmd_doctor() {
