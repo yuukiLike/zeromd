@@ -363,13 +363,13 @@ cmd_doctor() {
             "  ✓ 同期エラーはありません"
     fi
 
-    # 7. .git directory size
+    # 7. .git directory size (warn above 300 MiB)
     if [ -n "$vault_dir" ] && [ -d "$vault_dir/.git" ]; then
         local git_size
         git_size=$(du -sh "$vault_dir/.git" 2>/dev/null | cut -f1)
-        local size_bytes
-        size_bytes=$(du -sk "$vault_dir/.git" 2>/dev/null | cut -f1)
-        if [ "${size_bytes:-0}" -gt 102400 ]; then
+        local size_kib
+        size_kib=$(du -sk "$vault_dir/.git" 2>/dev/null | cut -f1)
+        if [ "${size_kib:-0}" -gt 307200 ]; then
             say "$lang" \
                 "  ⚠ .git 目录较大: $git_size" \
                 "  ⚠ .git directory large: $git_size" \
